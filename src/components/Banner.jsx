@@ -28,7 +28,7 @@ export default function Banner() {
   return (
     <div className="relative bg-gradient-to-br from-gray-900 via-indigo-950 to-gray-900 text-white overflow-hidden pt-20 pb-24 lg:pt-28 lg:pb-36">
       
-      {/* ব্যাকগ্রাউন্ড ডেকোরেশন (মডার্ন জ্যামিতিক শেপ) - হুবহু আগের মতো */}
+      {/* ব্যাকগ্রাউন্ড ডেকোরেশন (মডার্ন জ্যামিতিক শেপ) */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-500 rounded-full blur-[120px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-indigo-500 rounded-full blur-[150px]" />
@@ -36,9 +36,9 @@ export default function Banner() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
-        {/* ১. টেক্সট সেকশন: এখন সম্পূর্ণ সেন্টারে (Middle Aligned) */}
+        {/* ১. টেক্সট সেকশন: সম্পূর্ণ সেন্টারে (Middle Aligned) */}
         <motion.div 
-          className="flex flex-col items-center text-center max-w-3xl mx-auto space-y-6 mb-20 lg:mb-24"
+          className="flex flex-col items-center text-center max-w-4xl mx-auto space-y-6 mb-20 lg:mb-24"
           initial="hidden"
           animate="visible"
           variants={containerVariants}
@@ -48,15 +48,12 @@ export default function Banner() {
             <Shield className="w-4 h-4" /> Trusted Online Legal Marketplace
           </motion.div>
 
-          {/* মেইন হেডিং */}
+          {/* মেইন হেডিং: পুরো লেখাটি একই আই-ক্যাচিং গ্রেডিয়েন্টে */}
           <motion.h1 
             variants={fadeIn}
-            className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight"
+            className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-teal-300 to-indigo-300 drop-shadow-sm pb-2"
           >
-            Find & Hire Expert <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">
-              Legal Counsel
-            </span> Easily.
+            Find & Hire Expert Legal Counsel Easily
           </motion.h1>
 
           {/* সাব-টেক্সট */}
@@ -85,7 +82,7 @@ export default function Banner() {
           </motion.div>
         </motion.div>
 
-        {/* ২. কার্ড সেকশন: একই ডিজাইনের ৪টি কার্ড এখন একদম নিচের দিকে সুন্দর লাইনে সাজানো */}
+        {/* ২. কার্ড সেকশন: নিচে সুন্দরভাবে সাজানো */}
         <motion.div 
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
           initial={{ opacity: 0, y: 50 }}
@@ -126,7 +123,7 @@ export default function Banner() {
           </div>
 
           {/* কার্ড ৪: Quick Consultation */}
-          <div className="p-6 bg-blue-600 rounded-2xl flex flex-col justify-between shadow-xl shadow-blue-600/20 hover:bg-blue-700 transition-colors cursor-pointer">
+          <div className="p-6 rounded-2xl flex flex-col justify-between shadow-xl shadow-blue-600/20 hover:bg-blue-700 transition-colors cursor-pointer">
             <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-white mb-4">
               <Scale className="w-6 h-6" />
             </div>
