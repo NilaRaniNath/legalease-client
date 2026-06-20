@@ -24,7 +24,7 @@ export default function Navbar() {
       setIsOpen(false); // মোবাইল ভিউতে সার্চ করলে মেনু বন্ধ হবে
     }
   };
-console.log("Current User Role:", user?.role);
+// console.log("Current User Role:", user?.role);
   // লগআউট হ্যান্ডলার
   const handleLogout = async () => {
     await authClient.signOut({
