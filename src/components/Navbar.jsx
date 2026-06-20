@@ -138,10 +138,10 @@ export default function Navbar() {
               </button>
             ) : (
               <Link
-                href="/login"
+                href="/auth/signin"
                 className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
               >
-                Login
+                SignIn
               </Link>
             )}
           </div>
@@ -244,11 +244,11 @@ export default function Navbar() {
               </button>
             ) : (
               <Link
-                href="/login"
+                href="/auth/signin"
                 onClick={() => setIsOpen(false)}
                 className="block w-full text-center bg-blue-600 text-white py-2 rounded-lg font-medium text-sm"
               >
-                Login
+                SignIn
               </Link>
             )}
           </div>
