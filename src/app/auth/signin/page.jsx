@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { authClient } from '@/lib/auth-client'; // authClient অবজেক্টটি ইম্পোর্ট করুন
-import { Mail, Lock, ShieldAlert, ArrowRight } from 'lucide-react';
+import { signIn } from '@/lib/auth-client';
+import {  ShieldAlert, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 export default function SignIn() {
@@ -23,8 +23,8 @@ export default function SignIn() {
     setLoading(true);
     setError('');
 
-    // Better-Auth এর সঠিক স্ট্রাকচার অনুযায়ী কল করা হলো
-    await authClient.signIn.email(
+   
+    await signIn.email(
       {
         email: formData.email,
         password: formData.password,

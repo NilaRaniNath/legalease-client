@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { User, Gavel, Mail, Lock, ShieldCheck, ArrowRight, ShieldAlert } from 'lucide-react';
-import { authClient, signUp } from '@/lib/auth-client'; // আপনার প্রজেক্টের সঠিক পাথ অনুযায়ী ইম্পোর্ট করুন
+import { authClient } from '@/lib/auth-client'; // শুধুমাত্র authClient ইম্পোর্ট করলেই হবে
 
 export default function SignUp() {
   const router = useRouter();
@@ -27,10 +27,9 @@ export default function SignUp() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(false);
     setError('');
 
-    // পাসওয়ার্ড ম্যাচিং ভ্যালিডেশন
+    // পাসওয়ার্ড ম্যাচিং ভ্যালিডেশন
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match!");
       return;
@@ -38,17 +37,18 @@ export default function SignUp() {
 
     setLoading(true);
 
-    // BetterAuth/NextAuth authClient ইমেইল সাইন-আপ কল
-    const { data, error: authError } = await signUp.email({
+    // BetterAuth-এ রোল ডেটা পাস করার সঠিক নিয়ম
+    const { data, error: authError } = await authClient.signUp.email({
       email: formData.email,
       password: formData.password,
       name: formData.fullName,
-      callbackUrl: '/choose-role', // রেজিস্ট্রেশনের পর সরাসরি রিডাইরেক্ট হবে
+        role: role ,
+      
+      callbackUrl: '/choose-role', 
     }, {
       onRequest: () => setLoading(true),
       onSuccess: () => {
         setLoading(false);
-        
         router.push('/choose-role');
       },
       onError: (ctx) => {
@@ -103,10 +103,10 @@ export default function SignUp() {
 
           <div className="hidden lg:block border-t border-white/5 pt-6 space-y-3">
             <div className="flex items-center gap-3 text-xs text-gray-300">
-              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" /> Secure Encryption (JWT Token)
+              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" /> Secure Encryption (Database Session)
             </div>
             <div className="flex items-center gap-3 text-xs text-gray-300">
-              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" /> Automated Stripe Escrow
+              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" /> Automated Role Mapping
             </div>
           </div>
         </div>
@@ -172,7 +172,7 @@ export default function SignUp() {
               <div className="space-y-2">
                 <label className="text-xs text-gray-300 font-semibold uppercase tracking-wide">Full Name</label>
                 <div className="relative flex items-center">
-                 
+                  <User className="absolute left-4 w-5 h-5 text-gray-500 pointer-events-none" />
                   <input
                     type="text"
                     name="fullName"
@@ -189,7 +189,7 @@ export default function SignUp() {
               <div className="space-y-2">
                 <label className="text-xs text-gray-300 font-semibold uppercase tracking-wide">Email Address</label>
                 <div className="relative flex items-center">
-                 
+                  <Mail className="absolute left-4 w-5 h-5 text-gray-500 pointer-events-none" />
                   <input
                     type="email"
                     name="email"
@@ -208,12 +208,12 @@ export default function SignUp() {
               <div className="space-y-2">
                 <label className="text-xs text-gray-300 font-semibold uppercase tracking-wide">Password</label>
                 <div className="relative flex items-center">
-                  
+                  <Lock className="absolute left-4 w-5 h-5 text-gray-500 pointer-events-none" />
                   <input
                     type="password"
                     name="password"
                     required
-                    placeholder="password"
+                    placeholder="Password"
                     value={formData.password}
                     onChange={handleChange}
                     className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3.5 text-base text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
@@ -225,12 +225,12 @@ export default function SignUp() {
               <div className="space-y-2">
                 <label className="text-xs text-gray-300 font-semibold uppercase tracking-wide">Confirm Password</label>
                 <div className="relative flex items-center">
-                  
+                  <Lock className="absolute left-4 w-5 h-5 text-gray-500 pointer-events-none" />
                   <input
                     type="password"
                     name="confirmPassword"
                     required
-                    placeholder=" confirm password"
+                    placeholder="Confirm Password"
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3.5 text-base text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
