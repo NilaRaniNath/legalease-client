@@ -1,4 +1,7 @@
 @import "tailwindcss";
 @import "@heroui/styles";
 
-
+body, html {
+  background-color: #0B1524 !important; /* আপনার ইনপুটের ডার্ক কালার */
+  color: #f1f5f9 !important;
+}
