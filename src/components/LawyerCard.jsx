@@ -1,4 +1,3 @@
-// components/LawyerCard.jsx
 "use client";
 
 import { Card, Avatar, Chip } from "@heroui/react";
@@ -11,8 +10,8 @@ export default function LawyerCard({ lawyer }) {
 
   return (
     <Card
-      // 💡 পরিবর্তন: heroui প্রোপার্টি বাদ দিয়ে স্ট্যান্ডার্ড onClick এবং ক্লাস যোগ করা হয়েছে
-      onClick={() => router.push(`/lawyers/${lawyer._id}`)} 
+      // 💡 ফিক্স: lawyer._id এর বদলে lawyer.userId এবং আপনার কারেন্ট রাউট পাথ '/lawyers/' ব্যবহার করা হলো
+      onClick={() => router.push(`/lawyers/${lawyer.userId}`)} 
       className="bg-slate-900/40 border border-white/10 p-4 rounded-2xl hover:border-blue-500/50 hover:bg-slate-900/80 transition-all group duration-300 backdrop-blur-md flex flex-col justify-between items-start text-left w-full h-full shadow-lg cursor-pointer"
     >
       {/* টপ সেকশন: অ্যাভাটার এবং Busy ব্যাজ */}
@@ -20,7 +19,7 @@ export default function LawyerCard({ lawyer }) {
         <Avatar
           src={lawyer.image || null}
           fallback={<User className="w-6 h-6 text-slate-400" />}
-          className="w-14 h-14 rounded-xl bg-white/5 border border-white/10"
+          className="w-14 h-14 rounded-xl bg-white/5 border border-white/10 object-cover"
         />
         
         {isBusy && (

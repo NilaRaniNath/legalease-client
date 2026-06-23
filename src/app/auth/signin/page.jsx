@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { signIn } from '@/lib/auth-client';
-import {  ShieldAlert, ArrowRight } from 'lucide-react';
+import { ShieldAlert, ArrowRight, Mail, Lock } from 'lucide-react';
 import Link from 'next/link';
 
 export default function SignIn() {
@@ -18,35 +18,45 @@ export default function SignIn() {
     if (error) setError(''); 
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setError('');
 
-   
-    await signIn.email(
-      {
-        email: formData.email,
-        password: formData.password,
-        callbackUrl: '/',
+  await signIn.email(
+    {
+      email: formData.email,
+      password: formData.password,
+      callbackUrl: '/dashboard', // ওঅথ বা সেশন ফলব্যাক লিংক
+    },
+    {
+      onRequest: () => {
+        setLoading(true);
       },
-      {
-        onRequest: () => {
-          setLoading(true);
-        },
-        onSuccess: () => {
-          setLoading(false);
-          router.push('/');
-        },
-        onError: (ctx) => {
-          setLoading(false);
-          setError(
-            ctx.error?.message || 'Invalid credentials. Please try again.'
-          );
-        },
-      }
-    );
-  };
+      onSuccess: (ctx) => {
+        setLoading(false);
+        
+        // 💡 BetterAuth সেশন থেকে লগইন করা ইউজারের রোল তুলে আনা হলো
+        const userRole = ctx.data?.user?.role; 
+
+        // 🎯 রোল অনুযায়ী ডাইনামিক ড্যাশবোর্ড রিডিরেকশন (Admin, Lawyer, User)
+        if (userRole === 'admin') {
+          router.push('/dashboard/admin');
+        } else if (userRole === 'lawyer') {
+          router.push('/dashboard/lawyer');
+        } else {
+          router.push('/dashboard/user'); // সাধারণ ইউজার বা ক্লায়েন্ট ড্যাশবোর্ড
+        }
+      },
+      onError: (ctx) => {
+        setLoading(false);
+        setError(
+          ctx.error?.message || 'Invalid credentials. Please try again.'
+        );
+      },
+    }
+  );
+};
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-gray-900 via-indigo-950 to-gray-900 flex items-center justify-center p-4 sm:p-6 overflow-hidden">
@@ -96,7 +106,7 @@ export default function SignIn() {
           <div className="space-y-1.5">
             <label className="text-xs text-gray-400 font-medium">Email Address</label>
             <div className="relative flex items-center">
-              
+              <Mail className="absolute left-4 w-5 h-5 text-gray-500 pointer-events-none" />
               <input
                 type="email"
                 name="email"
@@ -104,7 +114,7 @@ export default function SignIn() {
                 placeholder="Enter your Email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 p-2 text-base text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3.5 text-base text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               />
             </div>
           </div>
@@ -116,6 +126,7 @@ export default function SignIn() {
               <a href="#" className="text-[11px] text-blue-400 hover:underline">Forgot?</a>
             </div>
             <div className="relative flex items-center">
+              <Lock className="absolute left-4 w-5 h-5 text-gray-500 pointer-events-none" />
               <input
                 type="password"
                 name="password"
@@ -123,7 +134,7 @@ export default function SignIn() {
                 placeholder="Password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 p-2  text-base text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3.5 text-base text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               />
             </div>
           </div>

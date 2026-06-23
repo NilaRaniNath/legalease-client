@@ -1,12 +1,10 @@
-/** @type {import('next').NextConfig} */
+/** @type {import('next').Config} */
 const nextConfig = {
   images: {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'i.ibb.co', // ImgBB এর ছবির ডোমেইন
-        port: '',
-        pathname: '/**',
+        hostname: 'i.ibb.co', // 💡 ImgBB এর ডোমেইন প্যাটার্ন
       },
     ],
   },

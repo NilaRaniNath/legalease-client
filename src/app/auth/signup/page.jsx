@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { User, Gavel, Mail, Lock, ShieldCheck, ArrowRight, ShieldAlert } from 'lucide-react';
-import { authClient } from '@/lib/auth-client'; // শুধুমাত্র authClient ইম্পোর্ট করলেই হবে
+import { authClient } from '@/lib/auth-client'; 
 
 export default function SignUp() {
   const router = useRouter();
@@ -29,7 +29,6 @@ export default function SignUp() {
     e.preventDefault();
     setError('');
 
-    // পাসওয়ার্ড ম্যাচিং ভ্যালিডেশন
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match!");
       return;
@@ -37,19 +36,21 @@ export default function SignUp() {
 
     setLoading(true);
 
-    // BetterAuth-এ রোল ডেটা পাস করার সঠিক নিয়ম
-    const { data, error: authError } = await authClient.signUp.email({
+    // 💡 ডাইনামিক ড্যাশবোর্ড ইউআরএল জেনারেট করা হলো
+    const targetDashboard = role === 'lawyer' ? '/dashboard/lawyer' : '/dashboard';
+
+    await authClient.signUp.email({
       email: formData.email,
       password: formData.password,
       name: formData.fullName,
-        role: role ,
-      
-      callbackUrl: '/choose-role', 
+      role: role, // BetterAuth মেটাডাটা বা কাস্টম প্লাগইনে রোল পাস হচ্ছে
+      callbackUrl: targetDashboard, // ওঅথ বা সেশন রিডাইরেক্টের জন্য সেফটি নেট
     }, {
       onRequest: () => setLoading(true),
       onSuccess: () => {
         setLoading(false);
-        router.push('/choose-role');
+        // 🎯 রোল অনুযায়ী নির্দিষ্ট ড্যাশবোর্ড পেজে রিডিরেক্ট
+        router.push(targetDashboard);
       },
       onError: (ctx) => {
         setLoading(false);
@@ -60,9 +61,12 @@ export default function SignUp() {
 
   const handleGoogleLogin = async () => {
     setError('');
+    // 💡 গুগলের মাধ্যমে সাইন আপের সময়ও রোল অনুযায়ী ড্যাশবোর্ডে পাঠাবে
+    const targetDashboard = role === 'lawyer' ? '/dashboard/lawyer' : '/dashboard';
+    
     await authClient.signIn.social({
       provider: 'google',
-      callbackUrl: '/choose-role', 
+      callbackUrl: targetDashboard, 
     });
   };
 
@@ -168,7 +172,6 @@ export default function SignUp() {
 
             {/* ২. ইনপুট ফিল্ডস */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              {/* Full Name */}
               <div className="space-y-2">
                 <label className="text-xs text-gray-300 font-semibold uppercase tracking-wide">Full Name</label>
                 <div className="relative flex items-center">
@@ -185,7 +188,6 @@ export default function SignUp() {
                 </div>
               </div>
 
-              {/* Email */}
               <div className="space-y-2">
                 <label className="text-xs text-gray-300 font-semibold uppercase tracking-wide">Email Address</label>
                 <div className="relative flex items-center">
@@ -204,7 +206,6 @@ export default function SignUp() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              {/* Password */}
               <div className="space-y-2">
                 <label className="text-xs text-gray-300 font-semibold uppercase tracking-wide">Password</label>
                 <div className="relative flex items-center">
@@ -221,7 +222,6 @@ export default function SignUp() {
                 </div>
               </div>
 
-              {/* Confirm Password */}
               <div className="space-y-2">
                 <label className="text-xs text-gray-300 font-semibold uppercase tracking-wide">Confirm Password</label>
                 <div className="relative flex items-center">
@@ -239,7 +239,6 @@ export default function SignUp() {
               </div>
             </div>
 
-            {/* সাবমিট বাটন */}
             <motion.button
               whileHover={{ scale: loading ? 1 : 1.01 }}
               whileTap={{ scale: loading ? 1 : 0.99 }}
@@ -252,7 +251,6 @@ export default function SignUp() {
             </motion.button>
           </form>
 
-          {/* ডিভাইডার এবং সোশ্যাল ওঅথ */}
           <div className="relative flex items-center justify-center py-2">
             <div className="border-t border-white/10 w-full" />
             <span className="bg-slate-900/80 backdrop-blur-sm px-4 text-xs text-gray-500 uppercase tracking-wider absolute">Or</span>

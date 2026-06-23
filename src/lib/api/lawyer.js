@@ -16,19 +16,6 @@ export async function getLawyerProfile(userId) {
   }
 }
 
-// ২. লয়ারের নিজস্ব সার্ভিস লিস্ট সার্ভার থেকে আনা
-export async function getLawyerServices(userId) {
-  try {
-    const res = await fetch(`${BASE_URL}/lawyer/services?userId=${userId}`, {
-      cache: "no-store",
-    });
-    if (!res.ok) throw new Error("Failed to fetch services");
-    const data = await res.json();
-    return data.success ? data.data : [];
-  } catch (error) {
-    console.error("Error in getLawyerServices:", error);
-    return [];
-  }
-}
+
 
 

@@ -1,41 +1,43 @@
-// app/dashboard/lawyer/manage-legal-profile/page.jsx
-import { getLawyerProfile, getLawyerServices } from "@/lib/api/lawyer";
 
+import { headers } from "next/headers"; 
 import LawyerProfileForm from "./LawyerProfileForm";
 import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
+async function getExistingProfile(userId) {
+  try {
+   
+    const res = await fetch(`http://localhost:8000/api/lawyer/profile?userId=${userId}`, {
+      cache: "no-store", 
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json.success ? json.data : null;
+  } catch (err) {
+    console.error("Error fetching existing profile:", err);
+    return null;
+  }
+}
 
 export default async function ManageLegalProfilePage() {
   const session = await auth.api.getSession({
-    headers: await headers(),
+    headers: await headers() 
   });
 
-  const userId = session?.user?.id;
-
-  
-  const [initialProfile, initialServices] = await Promise.all([
-    getLawyerProfile(userId),
-    getLawyerServices(userId)
-  ]);
-
-  return (
-    <div className="min-h-screen bg-slate-950 text-white p-6 md:p-12 space-y-12">
-      <div className="max-w-6xl mx-auto space-y-2 border-b border-white/5 pb-6">
-        <h1 className="text-3xl font-extrabold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
-          Manage Legal Profile & Services
-        </h1>
-        <p className="text-sm text-slate-400">
-          Control your public visibility, personal information, and consultancy specializations.
-        </p>
-      </div>
+  const user = session?.user;
+  const currentUserId = user?.id; 
 
  
-      <LawyerProfileForm 
-        currentUserId={userId}
-        initialProfile={initialProfile || {}}
-        initialServices={initialServices}
-      />
+  if (!currentUserId) {
+    redirect("/login"); 
+  }
+  
+  const existingProfile = await getExistingProfile(currentUserId);
+
+  return (
+    <div className="min-h-screen bg-[#0B1524] p-6 text-slate-100 flex items-center justify-center">
+      
+      <LawyerProfileForm userId={currentUserId} initialData={existingProfile} />
     </div>
   );
 }
