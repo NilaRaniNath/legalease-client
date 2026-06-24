@@ -1,4 +1,3 @@
-
 import { Card, Chip, Button } from "@heroui/react";
 import { Briefcase, DollarSign, Edit, PlusCircle } from "lucide-react";
 import Link from "next/link";
@@ -7,26 +6,33 @@ import { auth } from "@/lib/auth";
 import Image from "next/image";
 import DeleteServiceButton from "@/components/DeleteServiceButton";
 
-
-async function getDashboardProfile(userId) {
+// ড্যাশবোর্ড পেজের ডাটা ফেচিং ফাংশন (Express ব্যাকএন্ডের সাথে কানেক্টেড)
+async function getDashboardProfile(userEmail) {
   try {
-    const res = await fetch(`http://localhost:8000/api/lawyer/profile?userId=${userId}`, {
+    const res = await fetch(`http://127.0.0.1:8000/api/lawyer/profile?email=${encodeURIComponent(userEmail)}`, {
       cache: "no-store",
     });
+
     if (!res.ok) return null;
     const json = await res.json();
     return json.success ? json.data : null;
   } catch (err) {
+    console.error("Dashboard fetch error:", err);
     return null;
   }
 }
 
 export default async function DashboardPage() {
+  // Better Auth থেকে সেশন ডাটা রিড করা
   const session = await auth.api.getSession({
     headers: await headers()
   });
-  const currentUserId = session?.user?.id;
-  const profile = currentUserId ? await getDashboardProfile(currentUserId) : null;
+  
+  // 💡 ফিক্স: ID-এর পরিবর্তে Better Auth সেশন থেকে সরাসরি ইমেইল নেওয়া হলো
+  const currentUserEmail = session?.user?.email;
+  
+  // ইমেইল পাওয়া গেলে প্রোফাইল ডাটা ফেচ করা হবে
+  const profile = currentUserEmail ? await getDashboardProfile(currentUserEmail) : null;
 
   return (
     <div className="min-h-screen bg-[#0B1524] text-slate-100 p-6 md:p-12">
@@ -124,13 +130,11 @@ export default async function DashboardPage() {
                         </span>
                       </td>
                       <td className="p-4 text-right space-x-2">
-                        {/* এডিট অ্যাকশন */}
                         <Link href="/dashboard/lawyer/manage-legal-profile">
                           <Button size="sm" variant="light" className="text-sky-400 hover:bg-sky-500/10" isIconOnly>
                             <Edit className="w-4 h-4" />
                           </Button>
                         </Link>
-                        
                         
                         <DeleteServiceButton userId={profile.userId} />
                       </td>
