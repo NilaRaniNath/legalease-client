@@ -1,10 +1,10 @@
 import React from "react";
 import { headers } from "next/headers";
-import { auth } from "@/lib/auth"; // 🌟 তোমার প্রজেক্টের সঠিক auth পাথটি দাও
+import { auth } from "@/lib/auth"; 
 import { ShieldAlert } from "lucide-react";
 import HiringHistoryClient from "./HiringHistoryClient";
 
-// সার্ভার সাইড ডাটা ফেচিং ফাংশন (No useEffect)
+
 async function getHiringHistory(clientEmail) {
   if (!clientEmail) return [];
   try {
