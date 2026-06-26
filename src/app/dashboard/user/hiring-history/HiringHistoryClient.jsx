@@ -5,6 +5,7 @@ import { ShieldAlert, CreditCard, Calendar, User } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { loadStripe } from "@stripe/stripe-js";
+import { useRouter } from "next/navigation"; // 💡 ১. Next.js রাউটার ইম্পোর্ট করা হলো
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
@@ -17,43 +18,43 @@ const statusColorMap = {
 
 export default function HiringHistoryClient({ initialHistory = [] }) {
   const [loadingId, setLoadingId] = useState(null);
+  const router = useRouter(); // 💡 ২. রাউটার ইনিশিয়ালাইজ করা হলো
 
+  const handleStripePayment = async (item) => {
+    setLoadingId(item._id);
+    try {
+      const response = await fetch("/api/payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          hiringId: item._id,
+          lawyerId: item.lawyerId,
+          clientEmail: item.clientEmail,
+          amount: item.fee,
+          lawyerName: item.lawyerName,
+        }),
+      });
 
-const handleStripePayment = async (item) => {
-  setLoadingId(item._id);
-  try {
-    const response = await fetch("/api/payment", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        hiringId: item._id,
-        lawyerId: item.lawyerId,
-        clientEmail: item.clientEmail,
-        amount: item.fee,
-        lawyerName: item.lawyerName,
-      }),
-    });
+      const sessionData = await response.json();
 
-    const sessionData = await response.json();
+      if (!response.ok || sessionData.error) {
+        throw new Error(sessionData.error || "Failed to create Stripe session");
+      }
 
-    if (!response.ok || sessionData.error) {
-      throw new Error(sessionData.error || "Failed to create Stripe session");
+      if (sessionData.url) {
+        // 💡 ৩. window.location.href এর বদলে Next.js রাউটার দিয়ে রিডাইরেক্ট করা হলো
+        router.push(sessionData.url); 
+      } else {
+        throw new Error("Stripe checkout URL not found.");
+      }
+
+    } catch (error) {
+      console.error("Stripe Error:", error);
+      toast.error(error.message || "Stripe Checkout redirection failed.");
+    } finally {
+      setLoadingId(null);
     }
-
-   
-    if (sessionData.url) {
-      window.location.href = sessionData.url;
-    } else {
-      throw new Error("Stripe checkout URL not found.");
-    }
-
-  } catch (error) {
-    console.error("Stripe Error:", error);
-    toast.error(error.message || "Stripe Checkout redirection failed.");
-  } finally {
-    setLoadingId(null);
-  }
-};
+  };
 
   if (initialHistory.length === 0) {
     return (
@@ -65,7 +66,6 @@ const handleStripePayment = async (item) => {
     );
   }
 
- 
   const renderAction = (item) => {
     if (item.status === "accepted") {
       return (

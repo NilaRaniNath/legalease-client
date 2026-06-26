@@ -3,7 +3,8 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import { authClient } from "@/lib/auth-client";
-import { loadStripe } from "@stripe/stripe"; 
+import { loadStripe } from "@stripe/stripe-js";
+
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
 export default function HireButtonHandler({ lawyer }) {

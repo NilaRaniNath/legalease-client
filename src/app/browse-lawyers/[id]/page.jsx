@@ -1,13 +1,17 @@
 import HireButtonHandler from "@/components/HireButtonHandler";
-import { Calendar, DollarSign, CheckCircle2, XCircle, FileText } from "lucide-react";
+import CommentSection from "@/components/CommentSection"; 
+import { Calendar, DollarSign, CheckCircle2, XCircle, FileText, LogIn } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
-// ডাটা ফেচিং ফাংশন (আইডির বদলে ইমেইল দিয়ে সার্ভারে রিকোয়েস্ট পাঠানো)
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+
+
 async function getLawyerDetails(email) {
   try {
-    // লক্ষ্য করো এন্ডপয়েন্টটি: /api/lawyers/email/${email}
     const res = await fetch(`http://localhost:8000/api/lawyers/email/${email}`, {
-      cache: "no-store", // প্রতিবার একদম লেটেস্ট ডাটা নিশ্চিত করার জন্য
+      cache: "no-store",
     });
     if (!res.ok) return null;
     return await res.json();
@@ -17,16 +21,46 @@ async function getLawyerDetails(email) {
   }
 }
 
+
+async function getLawyerComments(lawyerId) {
+  try {
+    const res = await fetch(`http://localhost:8000/api/comments/${lawyerId}`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return json.success ? json.data : [];
+  } catch (err) {
+    console.error("Error fetching comments on server:", err);
+    return [];
+  }
+}
+
 export default async function LawyerDetailsPage({ params }) {
-  
-  // 🌟 ফিক্স: Next.js 15-এর নিয়ম অনুযায়ী params প্রমিজটি আনর‍্যাপ করা হলো
+
   const resolvedParams = await params;
-  
-  // এখন সেফলি অবজেক্ট থেকে id বা email ডিস্ট্রাকচার করো
   const { id, email } = resolvedParams;
-  const searchKey = email || id; // দুটোর যেকোনো একটি থেকে ভ্যালু নেওয়ার ব্যাকআপ
+  const searchKey = email || id;
 
   const lawyer = await getLawyerDetails(searchKey);
+
+  const reqHeaders = await headers(); 
+  
+  let isAuthenticated = false;
+  let currentUser = null;
+
+  try {
+    const session = await auth.api.getSession({
+      headers: reqHeaders, 
+    });
+    isAuthenticated = !!session?.user;
+    if (session?.user) {
+      currentUser = session.user;
+    }
+  } catch (err) {
+    console.error("Error fetching session on server side:", err);
+    isAuthenticated = false; 
+  }
 
   if (!lawyer) {
     return (
@@ -34,6 +68,25 @@ export default async function LawyerDetailsPage({ params }) {
         Lawyer not found! Please check if the email route is implemented on backend.
       </div>
     );
+  }
+
+ 
+  const initialComments = await getLawyerComments(lawyer._id);
+
+ 
+  let canComment = false;
+  if (currentUser && lawyer) {
+    try {
+      const checkRes = await fetch(
+        `http://localhost:8000/api/hirings/check?clientEmail=${currentUser.email}&lawyerId=${lawyer._id}`, 
+        { cache: "no-store" }
+      );
+      const checkData = await checkRes.json();
+      canComment = checkData.hasPaid;
+    } catch (err) {
+      console.error("Error checking hiring status:", err);
+      canComment = false;
+    }
   }
 
   return (
@@ -110,13 +163,32 @@ export default async function LawyerDetailsPage({ params }) {
               </div>
             </div>
 
-            {/* হায়ার বাটন হ্যান্ডলার */}
+            {/* অ্যাকশন বাটন সেকশন: লগইন কন্ডিশনাল চেকিং */}
             <div className="mt-8 pt-6 border-t border-slate-100">
-              <HireButtonHandler lawyer={lawyer} />
+              {isAuthenticated ? (
+                <HireButtonHandler lawyer={lawyer} />
+              ) : (
+                <Link href="/api/signin" className="w-full block">
+                  <button className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-bold rounded-xl tracking-wide transition-all shadow-lg flex items-center justify-center gap-2">
+                    <LogIn size={18} />
+                    Sign in to Hire a Lawyer
+                  </button>
+                </Link>
+              )}
             </div>
 
           </div>
         </div>
+
+        {/* 💡 নিচে কমেন্ট সেকশন কার্ড যোগ করা হলো */}
+        <div className="mt-8 bg-white rounded-3xl p-6 sm:p-12 shadow-md border border-slate-100">
+          <CommentSection 
+            lawyerId={lawyer._id} 
+            currentUser={canComment ? currentUser : null} 
+            initialComments={initialComments} 
+          />
+        </div>
+
       </div>
     </div>
   );
