@@ -16,7 +16,7 @@ export default function Navbar() {
   const { data: session, isPending } = authClient.useSession();
   const user = session?.user;
 
-  // console.log("session",session)
+  console.log("session",session)
   useEffect(() => {
     if (user) {
       router.refresh();
