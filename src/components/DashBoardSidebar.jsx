@@ -29,26 +29,26 @@ export default async function DashboardSidebar() {
     lawyer: [
       { icon: Briefcase, label: "Hiring History", link: "/dashboard/lawyer/hiring-history" },
       { icon: Briefcase, label: "Manage Profile", link: "/dashboard/lawyer/manage-legal-profile" },
-      { icon: CreditCard, label: "Transaction", link: "/dashboard/lawyer/transaction" },
+     
     ],
 
     user: [
       { icon: Briefcase, label: "Hiring History", link: "/dashboard/user/hiring-history" },
       { icon: User, label: "My Profile", link: "/dashboard/user/update-profile" },
       { icon: MessageSquare, label: "Comments", link: "/dashboard/user/comments" },
-      { icon: CreditCard, label: "Transaction", link: "/dashboard/user/transaction" },
+    
     ],
 
     admin: [
       { icon: Users, label: "Manage Users", link: "/dashboard/admin/manage-users" },
       { icon: BarChart3, label: "Analytics", link: "/dashboard/admin/analytics" },
-      { icon: CreditCard, label: "Transaction", link: "/dashboard/admin/transaction" },
+      { icon: CreditCard, label: "Transaction", link: "/dashboard/admin/all-transactions" },
     ],
   };
 
   const navItems = dashboardItems[role] || [];
 
-  // একটিভ লিংক চেক করার হেল্পার ফাংশন
+  
   const isLinkActive = (link) => activePath === link;
 
   return (

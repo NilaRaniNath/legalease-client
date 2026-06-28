@@ -3,11 +3,11 @@ import LawyerProfileForm from "./LawyerProfileForm";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
-// 💡 ফাংশনটি এখন সরাসরি email দিয়ে ব্যাকএন্ড থেকে প্রোফাইল খুঁজবে
+const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+
 async function getExistingProfile(email) {
   try {
-    // ব্যাকএন্ড যদি ইমেইল দিয়ে ডাটা খোঁজার জন্য রেডি থাকে (অথবা আপনার ব্যাকএন্ড রুট অনুযায়ী কুয়েরি নাম দিন)
-    const res = await fetch(`http://localhost:8000/api/lawyer/profile?email=${email}`, {
+    const res = await fetch(`${NEXT_PUBLIC_BASE_URL}/api/lawyer/profile?email=${email}`, {
       cache: "no-store", 
     });
     if (!res.ok) return null;
@@ -26,18 +26,18 @@ export default async function ManageLegalProfilePage() {
 
   const user = session?.user;
   const currentUserEmail = user?.email; 
-  const currentUserId = user?.id || user?.uid; // 💡 ইউজারের আইডি-টিও সেশন থেকে বের করে নিলাম
+  const currentUserId = user?.id || user?.uid; 
 
   if (!currentUserEmail) {
-    redirect("/login"); 
+    redirect("/auth/signin"); // 💡 তোমার রাউট স্ট্রাকচার অনুযায়ী পাথটি চেক করে নিও (/auth/signin নাকি /signin)
   }
   
-  // 💡 ইমেইল পাস করা হলো প্রোফাইল চেক করার জন্য
   const existingProfile = await getExistingProfile(currentUserEmail);
 
   return (
-    <div className="min-h-screen bg-[#0B1524] p-6 text-slate-100 flex items-center justify-center">
-      {/* 💡 এখন ৩টি প্রপস-ই পারফেক্টলি পাস করা হয়েছে */}
+    // 📱 প্যাডিং রেসপন্সিভ করা হলো: মোবাইলে p-4 এবং বড় স্ক্রিনে md:p-8
+    // কন্টেন্ট যেন মোবাইল স্ক্রিনে একদম উপরে লেগে না থাকে সেজন্য min-h-[calc(100vh-4rem)] ব্যবহার করা বেস্ট
+    <div className="min-h-[calc(100vh-4rem)] bg-[#0B1524] p-4 md:p-8 text-slate-100 flex items-center justify-center">
       <LawyerProfileForm 
         userId={currentUserId} 
         userEmail={currentUserEmail} 

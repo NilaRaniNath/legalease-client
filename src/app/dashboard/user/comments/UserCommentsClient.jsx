@@ -1,22 +1,22 @@
 "use client";
 import React, { useState } from "react";
-// 💡 ফিক্স: ভুল TextArea ইম্পোর্ট বাদ দিয়ে শুধু Textarea রাখা হয়েছে
+
 import { Button, Modal, ModalHeader, ModalBody, ModalFooter, Textarea, TextArea } from "@heroui/react";
 import { Edit2, Trash2, MessageSquare, Calendar } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function UserCommentsClient({ initialComments = [], currentUser }) {
   const [comments, setComments] = useState(initialComments);
-  const [isOpen, setIsOpen] = useState(false); // মোডাল ওপেন/ক্লোজ স্টেট
+  const [isOpen, setIsOpen] = useState(false); 
   const [selectedComment, setSelectedComment] = useState(null);
   const [editText, setEditText] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // 🗑️ ডিলিট হ্যান্ডলার
+ 
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this comment?")) return;
     try {
-      // 💡 ফিক্স: ব্যাকএন্ড সিকিউরিটির জন্য query parameter-এ ইউজারের ইমেইল পাস করা হলো
+      
       const res = await fetch(`http://localhost:8000/api/comments/${id}?email=${currentUser?.email}`, { 
         method: "DELETE" 
       });
@@ -24,7 +24,7 @@ export default function UserCommentsClient({ initialComments = [], currentUser }
       
       if (json.success) {
         toast.success("Comment deleted successfully!");
-        setComments(comments.filter(c => c._id !== id)); // রিলোড ছাড়া স্টেট থেকে ডিলিট
+        setComments(comments.filter(c => c._id !== id));
       } else {
         toast.error(json.message || "Failed to delete.");
       }
@@ -34,14 +34,14 @@ export default function UserCommentsClient({ initialComments = [], currentUser }
     }
   };
 
-  // 📝 এডিট মোডাল ওপেন করার ফাংশন
+  
   const openEditModal = (comment) => {
     setSelectedComment(comment);
     setEditText(comment.commentText);
     setIsOpen(true);
   };
 
-  // 💾 আপডেট সাবমিট হ্যান্ডলার
+
   const handleUpdate = async () => {
     if (!editText.trim()) return toast.error("Comment cannot be empty!");
     setSubmitting(true);
@@ -49,7 +49,7 @@ export default function UserCommentsClient({ initialComments = [], currentUser }
       const res = await fetch(`http://localhost:8000/api/comments/${selectedComment._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        // 💡 ফিক্স: ব্যাকএন্ড রিকোয়ারমেন্ট অনুযায়ী বডিতে userEmail পাঠানো হলো
+       
         body: JSON.stringify({ 
           commentText: editText,
           userEmail: currentUser?.email 
@@ -59,9 +59,9 @@ export default function UserCommentsClient({ initialComments = [], currentUser }
       
       if (json.success) {
         toast.success("Comment updated successfully!");
-        // রিলোড ছাড়া লোকাল স্টেট আপডেট
+       
         setComments(comments.map(c => c._id === selectedComment._id ? { ...c, commentText: editText } : c));
-        setIsOpen(false); // 💡 ফিক্স: ভুল স্টেট নাম ঠিক করে setIsOpen(false) করা হয়েছে
+        setIsOpen(false);
       } else {
         toast.error(json.message || "Update failed.");
       }

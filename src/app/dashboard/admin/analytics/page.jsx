@@ -1,8 +1,8 @@
 import { Users, ShieldCheck, Briefcase, DollarSign, BarChart3 } from "lucide-react";
-
+const NEXT_PUBLIC_BASE_URL=process.env.NEXT_PUBLIC_BASE_URL;
 async function getAnalyticsData() {
   try {
-    const res = await fetch("http://localhost:8000/api/admin/analytics", { cache: "no-store" });
+    const res = await fetch(`${NEXT_PUBLIC_BASE_URL}/api/admin/analytics`, { cache: "no-store" });
     if (!res.ok) return { totalUsers: 0, totalLawyers: 0, totalHires: 0, totalRevenue: 0 };
     return await res.json();
   } catch (err) {

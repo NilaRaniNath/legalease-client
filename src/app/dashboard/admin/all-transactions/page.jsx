@@ -1,8 +1,8 @@
 import { DollarSign, Calendar } from "lucide-react";
-
+const NEXT_PUBLIC_BASE_URL=process.env.NEXT_PUBLIC_BASE_URL;
 async function getTransactions() {
   try {
-    const res = await fetch("http://localhost:8000/api/transactions", { cache: "no-store" });
+    const res = await fetch(`${NEXT_PUBLIC_BASE_URL}/api/transactions`, { cache: "no-store" });
     if (!res.ok) return [];
     const json = await res.json();
     return json.success ? json.transactions : [];

@@ -8,9 +8,11 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
 
+ const NEXT_PUBLIC_BASE_URL=process.env.NEXT_PUBLIC_BASE_URL;
+
 async function getLawyerDetails(email) {
   try {
-    const res = await fetch(`http://localhost:8000/api/lawyers/email/${email}`, {
+    const res = await fetch(`${NEXT_PUBLIC_BASE_URL}/api/lawyers/email/${email}`, {
       cache: "no-store",
     });
     if (!res.ok) return null;
@@ -24,7 +26,7 @@ async function getLawyerDetails(email) {
 
 async function getLawyerComments(lawyerId) {
   try {
-    const res = await fetch(`http://localhost:8000/api/comments/${lawyerId}`, {
+    const res = await fetch(`${NEXT_PUBLIC_BASE_URL}/api/comments/${lawyerId}`, {
       cache: "no-store",
     });
     if (!res.ok) return [];

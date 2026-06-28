@@ -3,7 +3,9 @@ import { Briefcase, DollarSign, Search, ArrowUpRight, ArrowLeft, ArrowRight } fr
 import Image from "next/image";
 import Link from "next/link";
 
-// ডাটা ফেচিং ফাংশন (সার্ভার সাইড)
+
+ const NEXT_PUBLIC_BASE_URL=process.env.NEXT_PUBLIC_BASE_URL;
+
 async function getLawyers(resolvedParams) {
   try {
     const queryParams = new URLSearchParams({
@@ -15,7 +17,7 @@ async function getLawyers(resolvedParams) {
       limit: "6",
     });
 
-    const res = await fetch(`http://localhost:8000/api/lawyer/all?${queryParams.toString()}`, {
+    const res = await fetch(`${NEXT_PUBLIC_BASE_URL}/api/lawyer/all?${queryParams.toString()}`, {
       cache: "no-store", 
     });
     
@@ -31,10 +33,10 @@ async function getLawyers(resolvedParams) {
   }
 }
 
-// Next.js 15-এ searchParams একটি Promise, তাই শুরুতে async বসাতে হবে
+
 export default async function BrowseLawyersPage({ searchParams }) {
   
-  // 🌟 ফিক্স: Next.js 15 প্রমিজ আনর‍্যাপ করা হলো
+  
   const resolvedParams = await searchParams; 
   
   const currentSearch = resolvedParams.search || "";
@@ -43,7 +45,7 @@ export default async function BrowseLawyersPage({ searchParams }) {
   const currentMaxFee = resolvedParams.maxFee || "";
   const currentPage = parseInt(resolvedParams.page) || 1;
 
-  // ডাটা ফেচিং ফাংশনে আনর‍্যাপড অবজেক্ট পাঠানো হলো
+ 
   const { data: lawyers, pagination } = await getLawyers(resolvedParams);
   const totalPages = pagination.totalPages || 1;
 

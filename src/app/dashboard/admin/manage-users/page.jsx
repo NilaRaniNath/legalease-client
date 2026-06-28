@@ -1,8 +1,8 @@
 import ManageUsersClient from "./ManageUsersClient";
-
+const NEXT_PUBLIC_BASE_URL=process.env.NEXT_PUBLIC_BASE_URL;
 async function getAllUsers() {
   try {
-    const res = await fetch("http://localhost:8000/api/users", { cache: "no-store" });
+    const res = await fetch(`${NEXT_PUBLIC_BASE_URL}/api/users`, { cache: "no-store" });
     if (!res.ok) return [];
     const json = await res.json();
     return json.success ? json.users : [];

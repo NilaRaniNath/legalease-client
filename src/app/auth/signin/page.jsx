@@ -27,7 +27,7 @@ export default function SignIn() {
     {
       email: formData.email,
       password: formData.password,
-      callbackUrl: '/dashboard', // ওঅথ বা সেশন ফলব্যাক লিংক
+      callbackUrl: '/dashboard', 
     },
     {
       onRequest: () => {
@@ -35,17 +35,17 @@ export default function SignIn() {
       },
       onSuccess: (ctx) => {
         setLoading(false);
+       
         
-        // 💡 BetterAuth সেশন থেকে লগইন করা ইউজারের রোল তুলে আনা হলো
         const userRole = ctx.data?.user?.role; 
-
-        // 🎯 রোল অনুযায়ী ডাইনামিক ড্যাশবোর্ড রিডিরেকশন (Admin, Lawyer, User)
+           router.refresh();
+      
         if (userRole === 'admin') {
           router.push('/dashboard/admin');
         } else if (userRole === 'lawyer') {
           router.push('/dashboard/lawyer');
         } else {
-          router.push('/dashboard/user'); // সাধারণ ইউজার বা ক্লায়েন্ট ড্যাশবোর্ড
+          router.push('/dashboard/user'); 
         }
       },
       onError: (ctx) => {

@@ -8,14 +8,14 @@ import LawyerActions from "@/components/LawyerActions";
 
 export default function HiringHistoryClient({ initialRequests = [] }) {
   const [actionLoading, setActionLoading] = useState(null);
-  
+  const NEXT_PUBLIC_BASE_URL=process.env.NEXT_PUBLIC_BASE_URL;
   
   const [requests, setRequests] = useState(initialRequests);
 
   const handleActionUpdate = async (id, newStatus) => {
     setActionLoading(id);
     try {
-      const res = await fetch(`http://localhost:8000/api/hiring/update-status/${id}`, {
+      const res = await fetch(`${NEXT_PUBLIC_BASE_URL}/api/hiring/update-status/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
@@ -70,7 +70,7 @@ export default function HiringHistoryClient({ initialRequests = [] }) {
                 <td className="px-6 py-4 text-slate-400 text-xs">
                   <span className="flex items-center gap-1">
                     <Calendar size={14} />
-                    {req.requestDate ? new Date(req.requestDate).toLocaleDateString() : "N/A"}
+                    {req.requestDate ? new Date(req.requestDate).toLocaleDateString('en-US') : "N/A"}
                   </span>
                 </td>
                 <td className="px-6 py-4 font-bold text-emerald-400">${req.fee}/hr</td>

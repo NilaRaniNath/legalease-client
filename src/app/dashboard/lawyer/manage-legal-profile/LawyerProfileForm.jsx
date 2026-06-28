@@ -7,13 +7,12 @@ import Swal from "sweetalert2";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
-
 export default function LawyerProfileForm({ userId, initialData, userEmail }) {
   const router = useRouter();
-
-  // প্রোফাইল স্টেট ম্যানেজমেন্ট
+  const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+  
   const [profile, setProfile] = useState({
-    email: initialData?.email || userEmail || "", // ডাটাবেজের কনভেনশন অনুযায়ী ফিল্ডের নাম email রাখা ভালো
+    email: initialData?.email || userEmail || "", 
     name: initialData?.name || "",
     specialization: initialData?.specialization || "",
     fee: initialData?.fee || "",
@@ -66,8 +65,6 @@ export default function LawyerProfileForm({ userId, initialData, userEmail }) {
   // প্রোফাইল ক্রিয়েট বা আপডেট করার ফাংশন
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
-
-    // 💡 সিকিউরড ও ডিফেন্সিভ ইমেইল সিলেকশন
     const finalEmail = profile.email || userEmail;
 
     if (!finalEmail) {
@@ -88,10 +85,9 @@ export default function LawyerProfileForm({ userId, initialData, userEmail }) {
       isVerified: initialData ? true : false 
     };
 
-    // ক) ইউজার যদি অলরেডি ভেরিফাইড বা পুরানো হয় (সরাসরি আপডেট)
     if (initialData) {
       try {
-        const res = await fetch("http://localhost:8000/api/lawyer/profile", {
+        const res = await fetch(`${NEXT_PUBLIC_BASE_URL}/api/lawyer/profile`, {
           method: "POST", 
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -107,9 +103,8 @@ export default function LawyerProfileForm({ userId, initialData, userEmail }) {
       return;
     }
 
-    // খ) ইউজার যদি একদম নতুন হয় (প্রথমে ডাটাবেজে সেভ, তারপর পেমেন্টে রিডাইরেক্ট)
     try {
-      const res = await fetch("http://localhost:8000/api/lawyer/profile", {
+      const res = await fetch(`${NEXT_PUBLIC_BASE_URL}/api/lawyer/profile`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -128,7 +123,6 @@ export default function LawyerProfileForm({ userId, initialData, userEmail }) {
           cancelButtonColor: "#64748b",
         }).then((result) => {
           if (result.isConfirmed) {
-            // 💡 ডাইনামিক ফর্ম তৈরি করে স্ট্রাইপ রুটে ইমেইল পাস করা হচ্ছে
             const checkoutForm = document.createElement("form");
             checkoutForm.method = "POST";
             checkoutForm.action = `/api/checkout_sessions?email=${encodeURIComponent(finalEmail)}`;
@@ -145,13 +139,12 @@ export default function LawyerProfileForm({ userId, initialData, userEmail }) {
     }
   };
 
-  // তাৎক্ষণিক Publish / Unpublish Toggle করার ফাংশন
   const togglePublishStatus = async () => {
     const nextPublishState = !profile.isPublished;
     setProfile(prev => ({ ...prev, isPublished: nextPublishState }));
 
     try {
-      const res = await fetch("http://localhost:8000/api/lawyer/profile", {
+      const res = await fetch(`${NEXT_PUBLIC_BASE_URL}/api/lawyer/profile`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, isPublished: nextPublishState }),
@@ -172,7 +165,6 @@ export default function LawyerProfileForm({ userId, initialData, userEmail }) {
     }
   };
 
-  // সম্পূর্ণ প্রোফাইল/সেবা ডিলিট করার ফাংশন
   const handleDeleteProfile = async () => {
     Swal.fire({
       title: "Are you sure?",
@@ -185,7 +177,7 @@ export default function LawyerProfileForm({ userId, initialData, userEmail }) {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const res = await fetch(`http://localhost:8000/api/lawyer/profile/${userId}`, {
+          const res = await fetch(`${NEXT_PUBLIC_BASE_URL}/api/lawyer/profile/${userId}`, {
             method: "DELETE"
           });
           const data = await res.json();
@@ -202,142 +194,157 @@ export default function LawyerProfileForm({ userId, initialData, userEmail }) {
   };
 
   return (
-    <Card className="bg-[#152238] border border-slate-700 p-6 max-w-xl w-full space-y-5 shadow-2xl">
-      <div className="border-b border-slate-700 pb-3 flex justify-between items-center">
-        <div>
-          <h2 className="text-xl font-bold text-sky-400">Manage Legal Profile</h2>
-          <p className="text-xs text-slate-400 mt-0.5">
-            {initialData ? "Review and edit your existing services." : "Fill up details to launch your live card."}
-          </p>
-        </div>
-        {initialData && (
-          <div className="flex gap-2 items-center">
-            <Chip 
-              avatar={<CheckCircle className="w-3.5 h-3.5 text-emerald-500" />} 
-              color={profile.isPublished ? "success" : "warning"} 
-              variant="flat" 
-              size="sm"
-            >
-              {profile.isPublished ? "Live on Directory" : "Hidden / Paused"}
-            </Chip>
-          </div>
-        )}
-      </div>
-      
-      {/* ছবি ডিসপ্লে এবং একশনস */}
-      <div className="flex flex-col items-center gap-2">
-        <div className="relative group">
-          <Image 
-            src={profile.image} 
-            width={120}
-            height={120}
-            alt={profile.name || "UserImage"} 
-            priority 
-            className="w-24 h-24 md:w-32 md:h-32 rounded-xl bg-[#0B1524] border border-slate-700 shrink-0 object-cover" 
-          />
-          <label className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 rounded-xl cursor-pointer transition-opacity">
-            <Upload className="w-5 h-5 text-sky-400" />
-            <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-          </label>
-        </div>
-        {uploading && <span className="text-xs text-sky-400 animate-pulse">Uploading photo to ImgBB...</span>}
-
-        {/* Quick Controls */}
-        {initialData && (
-          <div className="flex gap-4 mt-2">
-            <Button size="sm" variant="flat" color={profile.isPublished ? "warning" : "success"} onClick={togglePublishStatus}>
-              {profile.isPublished ? <><EyeOff className="w-4 h-4 mr-1" /> Unpublish</> : <><Eye className="w-4 h-4 mr-1" /> Publish Live</>}
-            </Button>
-            <Button size="sm" variant="flat" color="danger" onClick={handleDeleteProfile}>
-              <Trash2 className="w-4 h-4 mr-1" /> Delete Profile
-            </Button>
-          </div>
-        )}
-      </div>
-
-      {/* প্রোফাইল এডিট ফর্ম */}
-      <form onSubmit={handleProfileSubmit} className="space-y-4 text-left">
-        <div>
-          <label className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Full Name</label>
-          <input 
-            type="text" 
-            required 
-            placeholder="Official legal name"
-            value={profile.name} 
-            onChange={(e) => setProfile({...profile, name: e.target.value})} 
-            className="w-full mt-1 px-4 py-2.5 bg-[#0B1524] border border-slate-700 rounded-xl text-sm text-slate-100 focus:outline-none focus:border-sky-500" 
-          />
-        </div>
-
-        <div>
-          <label className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Specialization Field</label>
-          <div className="relative mt-1">
-            <Briefcase className="w-4 h-4 text-slate-500 absolute left-3 top-3.5" />
-            <select
-              required
-              value={profile.specialization}
-              onChange={(e) => setProfile({...profile, specialization: e.target.value})}
-              className="w-full pl-10 pr-4 py-2.5 bg-[#0B1524] border border-slate-700 rounded-xl text-sm text-slate-100 focus:outline-none focus:border-sky-500 appearance-none cursor-pointer"
-            >
-              <option value="" disabled>Select Specialization</option>
-              <option value="Criminal Law">Criminal Law</option>
-              <option value="Corporate Law">Corporate & Business Law</option>
-              <option value="Family Law">Family & Marriage Law</option>
-              <option value="Property Law">Property & Real Estate Law</option>
-              <option value="Civil Law">Civil Law</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
+    // 📱 মেইন কন্টেইনারকে রেসপন্সিভ করতে w-full max-w-xl mx-auto এবং px-4/py-5 সেট করা হয়েছে
+    <div className="w-full max-w-xl mx-auto px-4 py-4">
+      <Card className="bg-[#152238] border border-slate-700 p-4 sm:p-6 w-full space-y-5 shadow-2xl rounded-2xl">
+        
+        {/* হেডার পার্ট */}
+        <div className="border-b border-slate-700 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
-            <label className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Consultation Fee ($/hr)</label>
+            <h2 className="text-xl font-bold text-sky-400">Manage Legal Profile</h2>
+            <p className="text-xs text-slate-400 mt-0.5">
+              {initialData ? "Review and edit your existing services." : "Fill up details to launch your live card."}
+            </p>
+          </div>
+          {initialData && (
+            <div className="flex-shrink-0">
+              <Chip 
+                avatar={<CheckCircle className="w-3.5 h-3.5 text-emerald-500" />} 
+                color={profile.isPublished ? "success" : "warning"} 
+                variant="flat" 
+                size="sm"
+              >
+                {profile.isPublished ? "Live on Directory" : "Hidden / Paused"}
+              </Chip>
+            </div>
+          )}
+        </div>
+        
+        {/* ছবি ডিসপ্লে এবং অ্যাকশনস */}
+        <div className="flex flex-col items-center gap-3">
+          <div className="relative group">
+            <Image 
+              src={profile.image} 
+              width={120}
+              height={120}
+              alt={profile.name || "UserImage"} 
+              priority 
+              className="w-24 h-24 sm:w-32 sm:h-32 rounded-xl bg-[#0B1524] border border-slate-700 shrink-0 object-cover" 
+            />
+            <label className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 rounded-xl cursor-pointer transition-opacity">
+              <Upload className="w-5 h-5 text-sky-400" />
+              <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+            </label>
+          </div>
+          {uploading && <span className="text-xs text-sky-400 animate-pulse">Uploading photo to ImgBB...</span>}
+
+          {/* Quick Controls - মোবাইল ফ্রেন্ডলি বাটন গ্রিড */}
+          {initialData && (
+            <div className="grid grid-cols-2 gap-3 w-full max-w-xs mt-1">
+              <Button size="sm" variant="flat" color={profile.isPublished ? "warning" : "success"} onClick={togglePublishStatus} className="w-full text-xs">
+                {profile.isPublished ? <><EyeOff className="w-3.5 h-3.5 mr-1" /> Unpublish</> : <><Eye className="w-3.5 h-3.5 mr-1" /> Publish Live</>}
+              </Button>
+              <Button size="sm" variant="flat" color="danger" onClick={handleDeleteProfile} className="w-full text-xs">
+                <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete Profile
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* প্রোফাইল এডিট ফর্ম */}
+        <form onSubmit={handleProfileSubmit} className="space-y-4 text-left">
+          <div>
+            <label className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Full Name</label>
+            <input 
+              type="text" 
+              required 
+              placeholder="Official legal name"
+              value={profile.name} 
+              onChange={(e) => setProfile({...profile, name: e.target.value})} 
+              className="w-full mt-1 px-4 py-2.5 bg-[#0B1524] border border-slate-700 rounded-xl text-sm text-slate-100 focus:outline-none focus:border-sky-500" 
+            />
+          </div>
+
+          <div>
+            <label className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Specialization Field</label>
             <div className="relative mt-1">
-              <DollarSign className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
-              <input 
-                type="number" 
-                required 
-                placeholder="Hourly rate"
-                value={profile.fee} 
-                onChange={(e) => setProfile({...profile, fee: e.target.value})} 
-                className="w-full pl-10 pr-4 py-2.5 bg-[#0B1524] border border-slate-700 rounded-xl text-sm text-slate-100 focus:outline-none focus:border-sky-500" 
-              />
+              <Briefcase className="w-4 h-4 text-slate-500 absolute left-3 top-3.5 pointer-events-none" />
+              <select
+                required
+                value={profile.specialization}
+                onChange={(e) => setProfile({...profile, specialization: e.target.value})}
+                className="w-full pl-10 pr-10 py-2.5 bg-[#0B1524] border border-slate-700 rounded-xl text-sm text-slate-100 focus:outline-none focus:border-sky-500 appearance-none cursor-pointer"
+              >
+                <option value="" disabled>Select Specialization</option>
+                <option value="Criminal Law">Criminal Law</option>
+                <option value="Corporate Law">Corporate & Business Law</option>
+                <option value="Family Law">Family & Marriage Law</option>
+                <option value="Property Law">Property & Real Estate Law</option>
+                <option value="Civil Law">Civil Law</option>
+              </select>
+              {/* কাস্টম ড্রপডাউন অ্যারো আইকন */}
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-500">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+              </div>
+            </div>
+          </div>
+
+          {/* মোবাইল এবং ডেক্সটপ রেসপন্সিভ গ্রিড (sm:grid-cols-2) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Consultation Fee ($/hr)</label>
+              <div className="relative mt-1">
+                <DollarSign className="w-4 h-4 text-slate-500 absolute left-3 top-3 pointer-events-none" />
+                <input 
+                  type="number" 
+                  required 
+                  placeholder="Hourly rate"
+                  value={profile.fee} 
+                  onChange={(e) => setProfile({...profile, fee: e.target.value})} 
+                  className="w-full pl-10 pr-4 py-2.5 bg-[#0B1524] border border-slate-700 rounded-xl text-sm text-slate-100 focus:outline-none focus:border-sky-500" 
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Availability Status</label>
+              <div className="relative mt-1">
+                <select
+                  value={profile.status}
+                  onChange={(e) => setProfile({...profile, status: e.target.value})}
+                  className="w-full px-4 pr-10 py-2.5 bg-[#0B1524] border border-slate-700 rounded-xl text-sm text-slate-100 focus:outline-none focus:border-sky-500 appearance-none cursor-pointer"
+                >
+                  <option value="Available">Available</option>
+                  <option value="Busy">Busy (Fully Booked)</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-500">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                </div>
+              </div>
             </div>
           </div>
 
           <div>
-            <label className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Availability Status</label>
-            <select
-              value={profile.status}
-              onChange={(e) => setProfile({...profile, status: e.target.value})}
-              className="w-full mt-1 px-4 py-2.5 bg-[#0B1524] border border-slate-700 rounded-xl text-sm text-slate-100 focus:outline-none focus:border-sky-500 appearance-none cursor-pointer"
-            >
-              <option value="Available">Available</option>
-              <option value="Busy">Busy (Fully Booked)</option>
-            </select>
+            <label className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Professional Summary / Bio</label>
+            <textarea 
+              rows={4} 
+              required 
+              placeholder="Describe your court achievements and legal history..."
+              value={profile.bio} 
+              onChange={(e) => setProfile({...profile, bio: e.target.value})} 
+              className="w-full mt-1 px-4 py-2.5 bg-[#0B1524] border border-slate-700 rounded-xl text-sm text-slate-100 focus:outline-none focus:border-sky-500 resize-none" 
+            />
           </div>
-        </div>
 
-        <div>
-          <label className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Professional Summary / Bio</label>
-          <textarea 
-            rows={4} 
-            required 
-            placeholder="Describe your court achievements and legal history..."
-            value={profile.bio} 
-            onChange={(e) => setProfile({...profile, bio: e.target.value})} 
-            className="w-full mt-1 px-4 py-2.5 bg-[#0B1524] border border-slate-700 rounded-xl text-sm text-slate-100 focus:outline-none focus:border-sky-500 resize-none" 
-          />
-        </div>
-
-        <Button 
-          type="submit" 
-          className="w-full bg-sky-500 hover:bg-sky-600 text-slate-900 font-bold mt-2 py-2.5" 
-          radius="xl"
-        >
-          {initialData ? "Update Legal Profile" : "Save & Proceed to Pay"}
-        </Button>
-      </form>
-    </Card>
+          <Button 
+            type="submit" 
+            className="w-full bg-sky-500 hover:bg-sky-600 text-slate-900 font-bold mt-2 py-2.5 text-sm" 
+            radius="xl"
+          >
+            {initialData ? "Update Legal Profile" : "Save & Proceed to Pay"}
+          </Button>
+        </form>
+      </Card>
+    </div>
   );
 }

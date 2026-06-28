@@ -7,9 +7,11 @@ import toast from "react-hot-toast";
 export default function ManageUsersClient({ initialUsers = [] }) {
   const [users, setUsers] = useState(initialUsers);
 
+const NEXT_PUBLIC_BASE_URL=process.env.NEXT_PUBLIC_BASE_URL;
+
   const handleRoleChange = async (userId, newRole) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/users/${userId}/role`, {
+      const res = await fetch(`${NEXT_PUBLIC_BASE_URL}/api/users/${userId}/role`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ role: newRole }),
@@ -29,7 +31,7 @@ export default function ManageUsersClient({ initialUsers = [] }) {
   const handleDeleteUser = async (userId) => {
     if (!confirm("Are you sure you want to delete this user?")) return;
     try {
-      const res = await fetch(`http://localhost:8000/api/users/${userId}`, { method: "DELETE" });
+      const res = await fetch(`${NEXT_PUBLIC_BASE_URL}/api/users/${userId}`, { method: "DELETE" });
       const data = await res.json();
       if (data.success) {
         toast.success("User removed successfully!");

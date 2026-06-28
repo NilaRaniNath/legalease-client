@@ -6,7 +6,7 @@ const BASE_URL = "http://localhost:8000/api";
 export async function getLawyerProfile(userId) {
   try {
     const res = await fetch(`${BASE_URL}/lawyer/profile?userId=${userId}`, {
-      cache: "no-store", // প্রতিবার লাইভ ফ্রেশ ডেটা সার্ভার থেকে রিকোয়েস্ট করবে
+      cache: "no-store", 
     });
     if (!res.ok) throw new Error("Failed to fetch profile");
     return await res.json();
