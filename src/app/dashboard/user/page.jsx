@@ -6,10 +6,12 @@ import { Edit, Mail, Shield, User } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image"; 
 
+const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+
 async function getUserProfile(email) {
   if (!email) return null;
   try {
-    const res = await fetch(`http://localhost:8000/user/${encodeURIComponent(email)}`, {
+    const res = await fetch(`${NEXT_PUBLIC_BASE_URL}/user/${encodeURIComponent(email)}`, {
       cache: "no-store", 
     });
     if (!res.ok) return null;
@@ -22,17 +24,26 @@ async function getUserProfile(email) {
 
 export default async function UserDashboardPage() {
   const session = await auth.api.getSession({ headers: await headers() });
-  const dbUser = await getUserProfile(session?.user?.email);
 
-  const profile = dbUser || session?.user;
-
-  if (!session) {
+  
+  if (!session || !session.user) {
     return (
       <div className="min-h-screen bg-[#0B1524] flex items-center justify-center text-slate-300">
         Please log in to view your profile.
       </div>
     );
   }
+
+ 
+  const dbUser = await getUserProfile(session.user.email);
+  const profile = dbUser || session.user;
+
+  
+  const defaultAvatar = "https://i.ibb.co/0V6Pv4LK/default-avatar.png";
+  
+  const displayImage = profile?.image && !profile.image.includes("googleusercontent") 
+    ? profile.image 
+    : defaultAvatar;
 
   return (
     <div className="min-h-screen bg-[#0B1524] text-slate-100 p-4 md:p-12 flex items-center justify-center">
@@ -41,15 +52,14 @@ export default async function UserDashboardPage() {
         {/* 🌟 রেসপন্সিভ ও সেফ ইমেজ কন্টেইনার */}
         <div className="flex justify-center">
           <div className="w-24 h-24 md:w-28 md:h-28 rounded-2xl bg-[#0B1524] border border-slate-800 flex items-center justify-center overflow-hidden shadow-lg">
-            {profile?.image ? (
+            {displayImage ? (
               <Image
-                src={profile.image}
+                src={displayImage}
                 alt="User Profile"
                 width={112}  
                 height={112} 
                 className="w-full h-full object-cover"
                 loading="eager"
-                
               />
             ) : (
               <User size={40} className="text-slate-500" />

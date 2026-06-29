@@ -80,7 +80,7 @@ export default async function LawyerDetailsPage({ params }) {
   if (currentUser && lawyer) {
     try {
       const checkRes = await fetch(
-        `http://localhost:8000/api/hirings/check?clientEmail=${currentUser.email}&lawyerId=${lawyer._id}`, 
+        `${NEXT_PUBLIC_BASE_URL}/api/hirings/check?clientEmail=${currentUser.email}&lawyerId=${lawyer._id}`, 
         { cache: "no-store" }
       );
       const checkData = await checkRes.json();

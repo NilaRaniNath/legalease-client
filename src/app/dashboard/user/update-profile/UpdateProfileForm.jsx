@@ -14,7 +14,14 @@ export default function UpdateProfileForm({ user }) {
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
   
+  
+  const defaultAvatar = "https://i.ibb.co/0V6v4LK/default-avatar.png";
+
+ 
+  const displayImage = image && !image.includes("googleusercontent") ? image : defaultAvatar;
+
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -30,7 +37,7 @@ export default function UpdateProfileForm({ user }) {
       });
       const imgData = await res.json();
       if (imgData.success) {
-        setImage(imgData.data.display_url);
+        setImage(imgData.data.display_url); // আপলোড সফল হলে ImgBB লিংক স্টেটে সেট হবে
         toast.success("Avatar uploaded!");
       }
     } catch (err) {
@@ -40,13 +47,12 @@ export default function UpdateProfileForm({ user }) {
     }
   };
 
-  
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
 
     try {
-      const res = await fetch(`http://localhost:8000/user/update-profile/${encodeURIComponent(user.email)}`, {
+      const res = await fetch(`${NEXT_PUBLIC_BASE_URL}/user/update-profile/${encodeURIComponent(user.email)}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, image }),
@@ -54,12 +60,9 @@ export default function UpdateProfileForm({ user }) {
 
       const data = await res.json();
       
-     
       if (data.acknowledged || data.modifiedCount > 0 || data.upsertedCount > 0) {
         toast.success("Profile updated successfully!");
-        
         router.refresh();
-        
         setTimeout(() => {
           router.push("/dashboard/user");
         }, 400);
@@ -91,24 +94,22 @@ export default function UpdateProfileForm({ user }) {
       {/* 🌟 ইমেজ সেকশন */}
       <div className="flex flex-col items-center gap-2">
         <div className="relative group">
-        
-<div className="w-24 h-24 rounded-2xl bg-[#0B1524] border border-slate-700 group-hover:border-sky-500 transition-all overflow-hidden flex items-center justify-center shadow-inner">
-  {image ? (
-    <Image 
-      src={image} 
-      alt="User Profile" 
-      width={96} 
-      height={96} 
-      className="w-full h-full object-cover"
-      priority
-      loading="eager"
-      
-    />
-  ) : (
-    <User size={32} className="text-slate-500" />
-  )}
-</div>
-           
+          <div className="w-24 h-24 rounded-2xl bg-[#0B1524] border border-slate-700 group-hover:border-sky-500 transition-all overflow-hidden flex items-center justify-center shadow-inner">
+            {/* 💡 এখানে profile.image বা image-এর বদলে কন্ডিশনাল displayImage ব্যবহার করা হয়েছে */}
+            {displayImage ? (
+              <Image 
+                src={displayImage} 
+                alt="User Profile" 
+                width={96} 
+                height={96} 
+                className="w-full h-full object-cover"
+                priority
+              />
+            ) : (
+              <User size={32} className="text-slate-500" />
+            )}
+          </div>
+             
           <label className="absolute inset-0 flex items-center justify-center bg-black/70 opacity-0 group-hover:opacity-100 rounded-2xl cursor-pointer transition-opacity z-10">
             <Upload size={18} className="text-sky-400" />
             <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />

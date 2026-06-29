@@ -36,20 +36,20 @@ export default function SignUp() {
 
     setLoading(true);
 
-    // 💡 ডাইনামিক ড্যাশবোর্ড ইউআরএল জেনারেট করা হলো
+  
     const targetDashboard = role === 'lawyer' ? '/dashboard/lawyer' : '/dashboard';
 
     await authClient.signUp.email({
       email: formData.email,
       password: formData.password,
       name: formData.fullName,
-      role: role, // BetterAuth মেটাডাটা বা কাস্টম প্লাগইনে রোল পাস হচ্ছে
-      callbackUrl: targetDashboard, // ওঅথ বা সেশন রিডাইরেক্টের জন্য সেফটি নেট
+      role: role, 
+      callbackUrl: targetDashboard, 
     }, {
       onRequest: () => setLoading(true),
       onSuccess: () => {
         setLoading(false);
-        // 🎯 রোল অনুযায়ী নির্দিষ্ট ড্যাশবোর্ড পেজে রিডিরেক্ট
+        
         router.push(targetDashboard);
       },
       onError: (ctx) => {
@@ -61,7 +61,7 @@ export default function SignUp() {
 
   const handleGoogleLogin = async () => {
     setError('');
-    // 💡 গুগলের মাধ্যমে সাইন আপের সময়ও রোল অনুযায়ী ড্যাশবোর্ডে পাঠাবে
+    
     const targetDashboard = role === 'lawyer' ? '/dashboard/lawyer' : '/dashboard';
     
     await authClient.signIn.social({

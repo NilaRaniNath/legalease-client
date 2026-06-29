@@ -6,10 +6,12 @@ import { auth } from "@/lib/auth";
 import Image from "next/image";
 import DeleteServiceButton from "@/components/DeleteServiceButton";
 
-// ড্যাশবোর্ড পেজের ডাটা ফেচিং ফাংশন (Express ব্যাকএন্ডের সাথে কানেক্টেড)
+  const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+
+
 async function getDashboardProfile(userEmail) {
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api/lawyer/profile?email=${encodeURIComponent(userEmail)}`, {
+    const res = await fetch(`${NEXT_PUBLIC_BASE_URL}/api/lawyer/profile?email=${encodeURIComponent(userEmail)}`, {
       cache: "no-store",
     });
 
@@ -23,15 +25,15 @@ async function getDashboardProfile(userEmail) {
 }
 
 export default async function DashboardPage() {
-  // Better Auth থেকে সেশন ডাটা রিড করা
+
   const session = await auth.api.getSession({
     headers: await headers()
   });
   
-  // 💡 ফিক্স: ID-এর পরিবর্তে Better Auth সেশন থেকে সরাসরি ইমেইল নেওয়া হলো
+  
   const currentUserEmail = session?.user?.email;
   
-  // ইমেইল পাওয়া গেলে প্রোফাইল ডাটা ফেচ করা হবে
+  
   const profile = currentUserEmail ? await getDashboardProfile(currentUserEmail) : null;
 
   return (
