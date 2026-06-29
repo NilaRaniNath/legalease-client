@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# ⚖️ LegalEase – Premium On-Demand Lawyer Marketplace
 
-## Getting Started
+LegalEase is a modern, responsive full-stack platform built with the MERN stack and Next.js, designed to bridge the gap between clients and professional legal practitioners. Users can explore verified legal consultants, book consultation slots, view hiring histories, and manage professional profiles seamlessly.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🚀 Live Links & Previews
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **Live Application:** :https://legal-ease-two-silk.vercel.app
+- **Backend API Server:** :https://legalease-server-wine.vercel.app
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🎯 Project Purpose & Mission
 
-## Learn More
+Finding the right legal help is often time-consuming and confusing. **LegalEase** simplifies this ecosystem. It provides a secure space where lawyers can create dynamic professional cards, list their specialization fields (e.g., Corporate, Criminal, Family Law), toggle their live visibility, and collect client bookings. For clients, it offers a transparent marketplace to review service fees, availability, and track hiring history accurately.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## ✨ Key Features
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **🔒 Advanced Authentication (Better-Auth):** Secure social and credential-based sign-in with automatic session management syncing without heavy page reloads.
+- **💼 Dynamic Legal Directory:** Browse legal professionals categorized by specialized practice areas with real-time "Available" or "Busy" status indicators.
+- **🛠️ Self-Service Lawyer Dashboard:** Legal experts can create, edit, publish/unpublish, or permanently delete their marketplace listings directly via a sleek dashboard.
+- **📸 Cloud-Based Image Uploads:** Integration with ImgBB API for seamless, lightning-fast profile photo upgrades.
+- **💳 Premium Stripe Integration:** Interactive checkouts allowing lawyers to activate their premium professional listing card upon onboarding payment.
+- **📱 Ultra-Responsive Native UI:** Built with global Tailwind standardizations ensuring a fluid, pixel-perfect user experience across standard smart displays, mobile devices, and desktops.
+- **🗃️ Optimized Serverless Architecture:** Advanced MongoDB connection pooling preventing connection bottlenecks and handling high traffic on Vercel deployment without server crashes.
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🛠️ Tech Stack & Packages Used
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Frontend (Client-Side)
+- **Framework:** Next.js (App Router)
+- **UI & Components:** `@heroui/react` (formerly NextUI), Tailwind CSS
+- **Icons:** `lucide-react`
+- **Authentication Client:** `better-auth`
+- **Popups & Toasts:** `sweetalert2`
+
+### Backend (Server-Side)
+- **Runtime Environment:** Vercel 
+- **Database ORM:**  `mongodb`
+- **Payment Processing:** `stripe`
+
+---
+
