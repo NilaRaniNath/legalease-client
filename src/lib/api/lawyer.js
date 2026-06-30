@@ -1,11 +1,11 @@
 // lib/api/lawyer.js
 
-const BASE_URL = "http://localhost:8000/api";
+const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
-// ১. লয়ার প্রোফাইল ডেটা সার্ভার থেকে আনা
+
 export async function getLawyerProfile(userId) {
   try {
-    const res = await fetch(`${BASE_URL}/lawyer/profile?userId=${userId}`, {
+    const res = await fetch(`${NEXT_PUBLIC_BASE_URL}/lawyer/profile?userId=${userId}`, {
       cache: "no-store", 
     });
     if (!res.ok) throw new Error("Failed to fetch profile");
