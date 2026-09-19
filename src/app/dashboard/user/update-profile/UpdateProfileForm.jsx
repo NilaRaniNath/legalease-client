@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { userApi } from "@/lib/api";
 
-export default function UpdateProfileForm({ user }) {
+export default function UpdateProfileForm({ user, imgbbApiKey }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [name, setName] = useState(user?.name || "");
@@ -48,7 +48,7 @@ export default function UpdateProfileForm({ user }) {
     formData.append("image", file);
 
     try {
-      const res = await fetch(`https://api.imgbb.com/1/upload?key=${process.env.NEXT_PUBLIC_IMGBB_API_KEY}`, {
+      const res = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, {
         method: "POST",
         body: formData,
       });

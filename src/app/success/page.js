@@ -11,7 +11,7 @@ export default function SuccessPage() {
         </div>
       }
     >
-      <SuccessContent />
+      <SuccessContent apiUrl={process.env.API_URL} />
     </Suspense>
   );
 }

@@ -9,7 +9,7 @@ import Image from "next/image";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { lawyerApi } from "@/lib/api";
 
-export default function LawyerProfileForm({ userId, initialData, userEmail }) {
+export default function LawyerProfileForm({ userId, initialData, userEmail, imgbbApiKey }) {
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -107,7 +107,7 @@ export default function LawyerProfileForm({ userId, initialData, userEmail }) {
     formData.append("image", file);
 
     try {
-      const res = await fetch(`https://api.imgbb.com/1/upload?key=${process.env.NEXT_PUBLIC_IMGBB_API_KEY}`, {
+      const res = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, {
         method: "POST",
         body: formData,
       });

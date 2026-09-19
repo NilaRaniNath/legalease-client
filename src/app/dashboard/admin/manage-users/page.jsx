@@ -2,10 +2,10 @@ import ManageUsersClient from "./ManageUsersClient";
 
 export const dynamic = 'force-dynamic';
 
-const NEXT_PUBLIC_API_URL=process.env.NEXT_PUBLIC_API_URL;
+const API_URL=process.env.API_URL;
 async function getAllUsers() {
   try {
-    const res = await fetch(`${NEXT_PUBLIC_API_URL}/api/users`, { cache: "no-store" });
+    const res = await fetch(`${API_URL}/api/users`, { cache: "no-store" });
     if (!res.ok) return [];
     const json = await res.json();
     return json.success ? json.users : [];

@@ -4,15 +4,13 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Swal from "sweetalert2";
 
-export default function SuccessContent() {
+export default function SuccessContent({ apiUrl }) {
   const searchParams = useSearchParams();
 
   const sessionId = searchParams.get("session_id");
   const email = searchParams.get("email");
 
   const [isVerifying, setIsVerifying] = useState(false);
-
-  const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   const handleVerifyPayment = async () => {
     if (!sessionId || !email) {
@@ -24,7 +22,7 @@ export default function SuccessContent() {
 
     try {
       const res = await fetch(
-        `${NEXT_PUBLIC_API_URL}/api/payment/confirm?session_id=${sessionId}&email=${email}`,
+        `${apiUrl}/api/payment/confirm?session_id=${sessionId}&email=${email}`,
         {
           method: "POST",
         }

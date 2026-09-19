@@ -12,7 +12,10 @@ import ChatWindow from "@/components/ChatWindow";
 import CaseTimeline from "@/components/CaseTimeline";
 import { caseApi } from "@/lib/api";
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+export default function HiringHistoryClient({ initialHistory = [], stripePublishableKey }) {
+  const stripePromise = stripePublishableKey
+    ? loadStripe(stripePublishableKey)
+    : null;
 
 const statusColorMap = {
   pending: "warning",
@@ -21,7 +24,6 @@ const statusColorMap = {
   rejected: "danger",
 };
 
-export default function HiringHistoryClient({ initialHistory = [] }) {
   const [loadingId, setLoadingId] = useState(null);
   const [activeChat, setActiveChat] = useState(null);
   const router = useRouter();

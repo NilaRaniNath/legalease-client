@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 
- const NEXT_PUBLIC_API_URL=process.env.NEXT_PUBLIC_API_URL;
+ const API_URL=process.env.API_URL;
 
 async function getLawyers(resolvedParams) {
   try {
@@ -17,7 +17,7 @@ async function getLawyers(resolvedParams) {
       limit: "6",
     });
 
-    const res = await fetch(`${NEXT_PUBLIC_API_URL}/api/lawyer/all?${queryParams.toString()}`, {
+    const res = await fetch(`${API_URL}/api/lawyer/all?${queryParams.toString()}`, {
       cache: "no-store", 
     });
     

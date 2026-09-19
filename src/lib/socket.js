@@ -1,11 +1,12 @@
 import { io } from "socket.io-client";
-import { BASE_URL } from "@/lib/api/client";
+import { getBaseURL } from "@/lib/api/client";
 
 let socket = null;
 
-export function getSocket() {
+export async function getSocket() {
   if (!socket) {
-    socket = io(BASE_URL, {
+    const base = await getBaseURL();
+    socket = io(base, {
       autoConnect: false,
       transports: ["polling", "websocket"],
     });

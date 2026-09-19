@@ -8,12 +8,12 @@ import DeleteServiceButton from "@/components/DeleteServiceButton";
 import AvailabilityManager from "@/components/AvailabilityManager";
 import BookingManager from "@/components/BookingManager";
 
-  const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL;
+  const API_URL = process.env.API_URL;
 
 
 async function getDashboardProfile(userEmail) {
   try {
-    const res = await fetch(`${NEXT_PUBLIC_API_URL}/api/lawyer/profile?email=${encodeURIComponent(userEmail)}`, {
+    const res = await fetch(`${API_URL}/api/lawyer/profile?email=${encodeURIComponent(userEmail)}`, {
       cache: "no-store",
     });
 

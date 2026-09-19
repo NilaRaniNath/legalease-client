@@ -1,7 +1,25 @@
-export const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+export const BASE_URL = process.env.API_URL;
+
+let cachedBaseURL;
+
+async function getBaseURL() {
+  if (typeof window === "undefined") {
+    return process.env.API_URL || "";
+  }
+  if (cachedBaseURL !== undefined) return cachedBaseURL;
+  try {
+    const res = await fetch("/api/config", { cache: "no-store" });
+    const data = await res.json();
+    cachedBaseURL = data.API_URL || "";
+  } catch {
+    cachedBaseURL = "";
+  }
+  return cachedBaseURL;
+}
 
 async function request(path, options = {}) {
-  const res = await fetch(`${BASE_URL}${path}`, {
+  const baseURL = await getBaseURL();
+  const res = await fetch(`${baseURL}${path}`, {
     cache: "no-store",
     ...options,
     headers: {
@@ -45,4 +63,6 @@ export async function apiDelete(path, body) {
   });
 }
 
-export const BASE_URL_SERVER_ONLY = process.env.NEXT_PUBLIC_API_URL;
+export const BASE_URL_SERVER_ONLY = process.env.API_URL;
+
+export { getBaseURL };

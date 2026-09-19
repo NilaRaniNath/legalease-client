@@ -3,11 +3,11 @@ import LawyerProfileForm from "./LawyerProfileForm";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
-const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = process.env.API_URL;
 
 async function getExistingProfile(email) {
   try {
-    const res = await fetch(`${NEXT_PUBLIC_API_URL}/api/lawyer/profile?email=${email}`, {
+    const res = await fetch(`${API_URL}/api/lawyer/profile?email=${email}`, {
       cache: "no-store", 
     });
     if (!res.ok) return null;
@@ -41,7 +41,8 @@ export default async function ManageLegalProfilePage() {
       <LawyerProfileForm 
         userId={currentUserId} 
         userEmail={currentUserEmail} 
-        initialData={existingProfile} 
+        initialData={existingProfile}
+        imgbbApiKey={process.env.IMGBB_API_KEY}
       />
     </div>
   );

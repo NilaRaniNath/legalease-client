@@ -4,11 +4,11 @@ import HiringHistoryClient from "./HiringHistoryClient";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
-const NEXT_PUBLIC_API_URL=process.env.NEXT_PUBLIC_API_URL;
+const API_URL=process.env.API_URL;
 async function getLawyerRequests(lawyerEmail) {
   if (!lawyerEmail) return [];
   try {
-    const res = await fetch(`${NEXT_PUBLIC_API_URL}/api/hiring/lawyer/${encodeURIComponent(lawyerEmail)}`, {
+    const res = await fetch(`${API_URL}/api/hiring/lawyer/${encodeURIComponent(lawyerEmail)}`, {
       cache: "no-store", 
     });
     if (!res.ok) return [];

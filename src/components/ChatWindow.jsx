@@ -48,81 +48,88 @@ export default function ChatWindow({ hiring, currentUserEmail, currentUserName, 
   // Load existing messages + connect socket
   useEffect(() => {
     let mounted = true;
-    const socket = getSocket();
-    socketRef.current = socket;
 
-    (async () => {
+    const setup = async () => {
       try {
+        const socket = await getSocket();
+        if (!mounted) return;
+        socketRef.current = socket;
+
         const { data: result } = await messageApi.getByHiring(hiringId);
         if (mounted && result?.success) setMessages(result.data);
+
+        socket.connect();
+        socket.emit("join_room", { hiringId, email: currentUserEmail });
+
+        const onNewMessage = (msg) => {
+          setMessages((prev) => {
+            if (prev.some((m) => m._id === msg._id)) return prev;
+            return [...prev, msg];
+          });
+        };
+
+        const onMessagesRead = ({ readerEmail }) => {
+          if (readerEmail === currentUserEmail) return;
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.senderEmail === currentUserEmail && m.receiverEmail === readerEmail
+                ? { ...m, read: true }
+                : m
+            )
+          );
+        };
+
+        const onMessageRead = ({ messageId }) => {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.senderEmail === currentUserEmail && m._id === messageId
+                ? { ...m, read: true }
+                : m
+            )
+          );
+        };
+
+        const onTyping = ({ email, isTyping: typing }) => {
+          if (email === currentUserEmail) return;
+          if (typing) {
+            setTypingUser(email);
+            clearTimeout(typingTimeout.current);
+            typingTimeout.current = setTimeout(() => setTypingUser(null), 2000);
+          } else {
+            setTypingUser(null);
+          }
+        };
+
+        const onError = (err) => {
+          if (err?.error) toast.error(err.error);
+        };
+
+        socket.on("new_message", onNewMessage);
+        socket.on("messages_read", onMessagesRead);
+        socket.on("message_read", onMessageRead);
+        socket.on("typing", onTyping);
+        socket.on("send_message_error", onError);
       } catch {
         if (mounted) toast.error("Failed to load messages");
       } finally {
         if (mounted) setLoading(false);
       }
-    })();
-
-    socket.connect();
-    socket.emit("join_room", { hiringId, email: currentUserEmail });
-
-    const onNewMessage = (msg) => {
-      setMessages((prev) => {
-        if (prev.some((m) => m._id === msg._id)) return prev;
-        return [...prev, msg];
-      });
     };
 
-    const onMessagesRead = ({ readerEmail }) => {
-      if (readerEmail === currentUserEmail) return;
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.senderEmail === currentUserEmail && m.receiverEmail === readerEmail
-            ? { ...m, read: true }
-            : m
-        )
-      );
-    };
-
-    const onMessageRead = ({ messageId }) => {
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.senderEmail === currentUserEmail && m._id === messageId
-            ? { ...m, read: true }
-            : m
-        )
-      );
-    };
-
-    const onTyping = ({ email, isTyping: typing }) => {
-      if (email === currentUserEmail) return;
-      if (typing) {
-        setTypingUser(email);
-        clearTimeout(typingTimeout.current);
-        typingTimeout.current = setTimeout(() => setTypingUser(null), 2000);
-      } else {
-        setTypingUser(null);
-      }
-    };
-
-    const onError = (err) => {
-      if (err?.error) toast.error(err.error);
-    };
-
-    socket.on("new_message", onNewMessage);
-    socket.on("messages_read", onMessagesRead);
-    socket.on("message_read", onMessageRead);
-    socket.on("typing", onTyping);
-    socket.on("send_message_error", onError);
+    setup();
 
     return () => {
       mounted = false;
-      socket.off("new_message", onNewMessage);
-      socket.off("messages_read", onMessagesRead);
-      socket.off("message_read", onMessageRead);
-      socket.off("typing", onTyping);
-      socket.off("send_message_error", onError);
-      socket.emit("leave_room", { hiringId });
-      socket.disconnect();
+      const socket = socketRef.current;
+      if (socket) {
+        socket.off("new_message");
+        socket.off("messages_read");
+        socket.off("message_read");
+        socket.off("typing");
+        socket.off("send_message_error");
+        socket.emit("leave_room", { hiringId });
+        socket.disconnect();
+      }
       clearTimeout(typingTimeout.current);
     };
   }, [hiringId, currentUserEmail]);

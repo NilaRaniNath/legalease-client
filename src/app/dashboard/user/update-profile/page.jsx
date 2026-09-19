@@ -4,11 +4,11 @@ import { auth } from "@/lib/auth";
 import UpdateProfileForm from "./UpdateProfileForm";
 
 
-  const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL;
+  const API_URL = process.env.API_URL;
 async function getUserProfile(email) {
   if (!email) return null;
   try {
-    const res = await fetch(`${NEXT_PUBLIC_API_URL}/user/${encodeURIComponent(email)}`, {
+    const res = await fetch(`${API_URL}/user/${encodeURIComponent(email)}`, {
       cache: "no-store",
     });
     return res.ok ? await res.json() : null;
@@ -26,7 +26,7 @@ export default async function UpdateProfilePage() {
   return (
     <div className="min-h-screen bg-[#0B1524] text-slate-100 p-4 md:p-12 flex items-center justify-center">
       <div className="w-full max-w-md">
-        {currentUser && <UpdateProfileForm user={currentUser} />}
+        {currentUser && <UpdateProfileForm user={currentUser} imgbbApiKey={process.env.IMGBB_API_KEY} />}
       </div>
     </div>
   );

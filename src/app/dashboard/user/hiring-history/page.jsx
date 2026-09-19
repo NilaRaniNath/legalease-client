@@ -4,11 +4,11 @@ import { auth } from "@/lib/auth";
 import { ShieldAlert } from "lucide-react";
 import HiringHistoryClient from "./HiringHistoryClient";
 
-  const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL;
+  const API_URL = process.env.API_URL;
 async function getHiringHistory(clientEmail) {
   if (!clientEmail) return [];
   try {
-    const res = await fetch(`${NEXT_PUBLIC_API_URL}/api/hiring/client/${encodeURIComponent(clientEmail)}`, {
+    const res = await fetch(`${API_URL}/api/hiring/client/${encodeURIComponent(clientEmail)}`, {
       cache: "no-store",
     });
     if (!res.ok) return [];
@@ -43,5 +43,5 @@ export default async function HiringHistoryPage() {
   }
 
   
-  return <HiringHistoryClient initialHistory={history} />;
+  return <HiringHistoryClient initialHistory={history} stripePublishableKey={process.env.STRIPE_PUBLISHABLE_KEY} />;
 }

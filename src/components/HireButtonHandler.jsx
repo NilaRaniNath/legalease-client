@@ -8,9 +8,10 @@ import { loadStripe } from "@stripe/stripe-js";
 import { AlertCircle, X } from "lucide-react";
 import { hiringApi } from "@/lib/api";
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
-
-export default function HireButtonHandler({ lawyer }) {
+export default function HireButtonHandler({ lawyer, stripePublishableKey }) {
+  const stripePromise = stripePublishableKey
+    ? loadStripe(stripePublishableKey)
+    : null;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const queryClient = useQueryClient();

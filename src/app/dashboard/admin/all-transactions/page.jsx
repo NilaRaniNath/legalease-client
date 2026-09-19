@@ -2,10 +2,10 @@ import { DollarSign, Calendar } from "lucide-react";
 
 export const dynamic = 'force-dynamic';
 
-const NEXT_PUBLIC_API_URL=process.env.NEXT_PUBLIC_API_URL;
+const API_URL=process.env.API_URL;
 async function getTransactions() {
   try {
-    const res = await fetch(`${NEXT_PUBLIC_API_URL}/api/transactions`, { cache: "no-store" });
+    const res = await fetch(`${API_URL}/api/transactions`, { cache: "no-store" });
     if (!res.ok) return [];
     const json = await res.json();
     return json.success ? json.transactions : [];

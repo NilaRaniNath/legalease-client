@@ -6,12 +6,12 @@ import { Edit, Mail, Shield, User } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image"; 
 
-const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = process.env.API_URL;
 
 async function getUserProfile(email) {
   if (!email) return null;
   try {
-    const res = await fetch(`${NEXT_PUBLIC_API_URL}/user/${encodeURIComponent(email)}`, {
+    const res = await fetch(`${API_URL}/user/${encodeURIComponent(email)}`, {
       cache: "no-store", 
     });
     if (!res.ok) return null;

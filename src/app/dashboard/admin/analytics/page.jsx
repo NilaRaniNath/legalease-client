@@ -2,10 +2,10 @@ import { Users, ShieldCheck, Briefcase, DollarSign, BarChart3 } from "lucide-rea
 
 export const dynamic = 'force-dynamic';
 
-const NEXT_PUBLIC_API_URL=process.env.NEXT_PUBLIC_API_URL;
+const API_URL=process.env.API_URL;
 async function getAnalyticsData() {
   try {
-    const res = await fetch(`${NEXT_PUBLIC_API_URL}/api/admin/analytics`, { cache: "no-store" });
+    const res = await fetch(`${API_URL}/api/admin/analytics`, { cache: "no-store" });
     if (!res.ok) return { totalUsers: 0, totalLawyers: 0, totalHires: 0, totalRevenue: 0 };
     return await res.json();
   } catch (err) {

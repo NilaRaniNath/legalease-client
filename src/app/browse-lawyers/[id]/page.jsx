@@ -9,11 +9,11 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
 
- const NEXT_PUBLIC_API_URL=process.env.NEXT_PUBLIC_API_URL;
+ const API_URL=process.env.API_URL;
 
 async function getLawyerDetails(email) {
   try {
-    const res = await fetch(`${NEXT_PUBLIC_API_URL}/api/lawyers/email/${email}`, {
+    const res = await fetch(`${API_URL}/api/lawyers/email/${email}`, {
       cache: "no-store",
     });
     if (!res.ok) return null;
@@ -27,7 +27,7 @@ async function getLawyerDetails(email) {
 
 async function getLawyerComments(lawyerId) {
   try {
-    const res = await fetch(`${NEXT_PUBLIC_API_URL}/api/comments/${lawyerId}`, {
+    const res = await fetch(`${API_URL}/api/comments/${lawyerId}`, {
       cache: "no-store",
     });
     if (!res.ok) return [];
@@ -81,7 +81,7 @@ export default async function LawyerDetailsPage({ params }) {
   if (currentUser && lawyer) {
     try {
       const checkRes = await fetch(
-        `${NEXT_PUBLIC_API_URL}/api/hirings/check?clientEmail=${currentUser.email}&lawyerId=${lawyer._id}`, 
+        `${API_URL}/api/hirings/check?clientEmail=${currentUser.email}&lawyerId=${lawyer._id}`, 
         { cache: "no-store" }
       );
       const checkData = await checkRes.json();
@@ -169,7 +169,7 @@ export default async function LawyerDetailsPage({ params }) {
             {/* অ্যাকশন বাটন সেকশন: লগইন কন্ডিশনাল চেকিং */}
             <div className="mt-8 pt-6 border-t border-slate-100">
               {isAuthenticated ? (
-                <HireButtonHandler lawyer={lawyer} />
+                <HireButtonHandler lawyer={lawyer} stripePublishableKey={process.env.STRIPE_PUBLISHABLE_KEY} />
               ) : (
                 <Link href="/api/signin" className="w-full block">
                   <button className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-bold rounded-xl tracking-wide transition-all shadow-lg flex items-center justify-center gap-2">
