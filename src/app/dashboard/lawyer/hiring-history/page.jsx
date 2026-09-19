@@ -3,8 +3,8 @@ import { ClipboardList, ShieldAlert } from "lucide-react";
 import HiringHistoryClient from "./HiringHistoryClient";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { API_URL } from "@/lib/config";
 
-const API_URL=process.env.API_URL;
 async function getLawyerRequests(lawyerEmail) {
   if (!lawyerEmail) return [];
   try {

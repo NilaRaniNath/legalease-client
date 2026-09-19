@@ -1,10 +1,9 @@
 import { Card, Chip, Button } from "@heroui/react";
-import { Briefcase, DollarSign, Search, ArrowUpRight, ArrowLeft, ArrowRight, Sparkles, Scale } from "lucide-react";
+import { Briefcase, DollarSign, Search, ArrowUpRight, ArrowLeft, ArrowRight, Sparkles, Scale, AlertTriangle, RefreshCw } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-
- const API_URL=process.env.API_URL;
+import { API_URL } from "@/lib/config";
 
 async function getLawyers(resolvedParams) {
   try {
@@ -18,18 +17,33 @@ async function getLawyers(resolvedParams) {
     });
 
     const res = await fetch(`${API_URL}/api/lawyer/all?${queryParams.toString()}`, {
-      cache: "no-store", 
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
-    
-    if (!res.ok) return { data: [], pagination: { totalPages: 1, currentPage: 1 } };
+
+    if (!res.ok) {
+      console.error(`Failed to fetch lawyers: HTTP ${res.status} ${res.statusText}`);
+      return {
+        data: [],
+        pagination: { totalPages: 1, currentPage: 1 },
+        error: `Server returned ${res.status} ${res.statusText}`,
+      };
+    }
     const json = await res.json();
     return {
       data: json.success ? json.data : [],
       pagination: json.pagination || { totalPages: 1, currentPage: 1 },
+      error: json.success ? null : (json.error || "API returned an unsuccessful response"),
     };
   } catch (err) {
     console.error("Error fetching lawyers:", err);
-    return { data: [], pagination: { totalPages: 1, currentPage: 1 } };
+    return {
+      data: [],
+      pagination: { totalPages: 1, currentPage: 1 },
+      error: err instanceof Error ? err.message : "Failed to reach the lawyer API",
+    };
   }
 }
 
@@ -46,7 +60,7 @@ export default async function BrowseLawyersPage({ searchParams }) {
   const currentPage = parseInt(resolvedParams.page) || 1;
 
  
-  const { data: lawyers, pagination } = await getLawyers(resolvedParams);
+  const { data: lawyers, pagination, error } = await getLawyers(resolvedParams);
   const totalPages = pagination.totalPages || 1;
 
   return (
@@ -153,7 +167,19 @@ export default async function BrowseLawyersPage({ searchParams }) {
         </form>
 
         {/* ডাটা রেন্ডারিং */}
-        {lawyers.length === 0 ? (
+        {error ? (
+          <div className="text-center py-16 bg-[#152238] rounded-2xl border border-red-500/40">
+            <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+            <p className="text-red-300 font-semibold">Could not load lawyers</p>
+            <p className="text-xs text-slate-400 mt-1.5 max-w-md mx-auto break-all">{error}</p>
+            <p className="text-xs text-slate-500 mt-3">
+              Make sure the API server is running at <span className="text-sky-400 font-mono">{API_URL}</span> and try again.
+            </p>
+            <Link href="/browse-lawyers" className="text-sky-400 text-sm inline-flex items-center gap-1.5 underline mt-4">
+              <RefreshCw className="w-3.5 h-3.5" /> Retry
+            </Link>
+          </div>
+        ) : lawyers.length === 0 ? (
           <div className="text-center py-20 bg-[#152238] rounded-2xl border border-slate-800">
             <p className="text-slate-400 font-medium">No lawyers found matching your selected criteria.</p>
             <Link href="/browse-lawyers" className="text-sky-400 text-sm underline mt-2 inline-block">Reset Filters</Link>

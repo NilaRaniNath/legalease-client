@@ -2,9 +2,8 @@ import React from "react";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import UpdateProfileForm from "./UpdateProfileForm";
+import { API_URL } from "@/lib/config";
 
-
-  const API_URL = process.env.API_URL;
 async function getUserProfile(email) {
   if (!email) return null;
   try {

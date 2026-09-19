@@ -7,8 +7,7 @@ import Image from "next/image";
 import DeleteServiceButton from "@/components/DeleteServiceButton";
 import AvailabilityManager from "@/components/AvailabilityManager";
 import BookingManager from "@/components/BookingManager";
-
-  const API_URL = process.env.API_URL;
+import { API_URL } from "@/lib/config";
 
 
 async function getDashboardProfile(userEmail) {

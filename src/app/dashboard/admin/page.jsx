@@ -1,9 +1,9 @@
 import AdminCharts from '@/components/AdminCharts';
 import { Users, Scale, DollarSign, Wallet, TrendingUp } from 'lucide-react';
+import { API_URL } from "@/lib/config";
 
 export const dynamic = 'force-dynamic';
 
-const API_URL = process.env.API_URL;
 async function getAnalyticsData() {
   try {
     const res = await fetch(`${API_URL}/api/admin/analytics`, {

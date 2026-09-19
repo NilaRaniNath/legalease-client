@@ -1,18 +1,21 @@
-export const BASE_URL = process.env.API_URL;
+const FALLBACK_API_URL = "http://localhost:8000";
+
+export const BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || FALLBACK_API_URL;
 
 let cachedBaseURL;
 
 async function getBaseURL() {
   if (typeof window === "undefined") {
-    return process.env.API_URL || "";
+    return BASE_URL;
   }
   if (cachedBaseURL !== undefined) return cachedBaseURL;
   try {
     const res = await fetch("/api/config", { cache: "no-store" });
     const data = await res.json();
-    cachedBaseURL = data.API_URL || "";
+    cachedBaseURL = data.API_URL || BASE_URL;
   } catch {
-    cachedBaseURL = "";
+    cachedBaseURL = BASE_URL;
   }
   return cachedBaseURL;
 }
@@ -27,7 +30,13 @@ async function request(path, options = {}) {
       ...(options.headers || {}),
     },
   });
-  const data = await res.json();
+
+  let data = null;
+  try {
+    data = await res.json();
+  } catch {
+    data = null;
+  }
   return { res, data };
 }
 
@@ -63,6 +72,7 @@ export async function apiDelete(path, body) {
   });
 }
 
-export const BASE_URL_SERVER_ONLY = process.env.API_URL;
+export const BASE_URL_SERVER_ONLY =
+  process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || FALLBACK_API_URL;
 
 export { getBaseURL };

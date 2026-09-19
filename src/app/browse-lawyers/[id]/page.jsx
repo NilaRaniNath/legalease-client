@@ -7,14 +7,15 @@ import Link from "next/link";
 
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-
-
- const API_URL=process.env.API_URL;
+import { API_URL } from "@/lib/config";
 
 async function getLawyerDetails(email) {
   try {
     const res = await fetch(`${API_URL}/api/lawyers/email/${email}`, {
       cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
     if (!res.ok) return null;
     return await res.json();
@@ -29,6 +30,9 @@ async function getLawyerComments(lawyerId) {
   try {
     const res = await fetch(`${API_URL}/api/comments/${lawyerId}`, {
       cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
     if (!res.ok) return [];
     const json = await res.json();
@@ -82,7 +86,7 @@ export default async function LawyerDetailsPage({ params }) {
     try {
       const checkRes = await fetch(
         `${API_URL}/api/hirings/check?clientEmail=${currentUser.email}&lawyerId=${lawyer._id}`, 
-        { cache: "no-store" }
+        { cache: "no-store", headers: { "Content-Type": "application/json" } }
       );
       const checkData = await checkRes.json();
       canComment = checkData.hasPaid;

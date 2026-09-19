@@ -6,13 +6,15 @@ import Link from "next/link";
 
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers"; 
-
-const API_URL = process.env.API_URL;
+import { API_URL } from "@/lib/config";
 
 async function getFeaturedLawyers() {
   try {
     const res = await fetch(`${API_URL}/api/lawyer/featured`, {
       cache: "no-store", 
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
     if (!res.ok) return [];
     const json = await res.json();

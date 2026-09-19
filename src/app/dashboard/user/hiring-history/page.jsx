@@ -3,8 +3,8 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth"; 
 import { ShieldAlert } from "lucide-react";
 import HiringHistoryClient from "./HiringHistoryClient";
+import { API_URL } from "@/lib/config";
 
-  const API_URL = process.env.API_URL;
 async function getHiringHistory(clientEmail) {
   if (!clientEmail) return [];
   try {

@@ -5,8 +5,7 @@ import { Card, Button } from "@heroui/react";
 import { Edit, Mail, Shield, User } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image"; 
-
-const API_URL = process.env.API_URL;
+import { API_URL } from "@/lib/config";
 
 async function getUserProfile(email) {
   if (!email) return null;

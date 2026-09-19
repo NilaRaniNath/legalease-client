@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import SuccessContent from "./SuccessContent";
+import { API_URL } from "@/lib/config";
 
 
 export default function SuccessPage() {
@@ -11,7 +12,7 @@ export default function SuccessPage() {
         </div>
       }
     >
-      <SuccessContent apiUrl={process.env.API_URL} />
+      <SuccessContent apiUrl={API_URL} />
     </Suspense>
   );
 }

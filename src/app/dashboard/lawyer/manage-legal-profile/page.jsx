@@ -2,8 +2,7 @@ import { headers } from "next/headers";
 import LawyerProfileForm from "./LawyerProfileForm";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-
-const API_URL = process.env.API_URL;
+import { API_URL } from "@/lib/config";
 
 async function getExistingProfile(email) {
   try {

@@ -1,8 +1,8 @@
 import ManageUsersClient from "./ManageUsersClient";
+import { API_URL } from "@/lib/config";
 
 export const dynamic = 'force-dynamic';
 
-const API_URL=process.env.API_URL;
 async function getAllUsers() {
   try {
     const res = await fetch(`${API_URL}/api/users`, { cache: "no-store" });
