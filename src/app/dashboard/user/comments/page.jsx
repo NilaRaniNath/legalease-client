@@ -1,11 +1,12 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import UserCommentsClient from "./UserCommentsClient";
+import { BASE_URL } from "@/lib/api/client";
 
 // সার্ভার সাইড ডেটা ফেচিং ফাংশন
 async function getUserComments(email) {
   try {
-    const res = await fetch(`http://localhost:8000/api/user-comments?email=${email}`, {
+    const res = await fetch(`${BASE_URL}/api/user-comments?email=${encodeURIComponent(email)}`, {
       cache: "no-store", // সবসময় লেটেস্ট ডেটা আনার জন্য
     });
     if (!res.ok) return [];

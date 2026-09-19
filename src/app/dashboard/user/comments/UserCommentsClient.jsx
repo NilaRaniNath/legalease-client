@@ -1,76 +1,80 @@
 "use client";
 import React, { useState } from "react";
 
-import { Button, Modal, ModalHeader, ModalBody, ModalFooter, Textarea, TextArea } from "@heroui/react";
+import { Button, Modal, ModalHeader, ModalBody, ModalFooter, TextArea } from "@heroui/react";
 import { Edit2, Trash2, MessageSquare, Calendar } from "lucide-react";
 import toast from "react-hot-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { commentApi } from "@/lib/api";
 
 export default function UserCommentsClient({ initialComments = [], currentUser }) {
-  const [comments, setComments] = useState(initialComments);
-  const [isOpen, setIsOpen] = useState(false); 
+  const [isOpen, setIsOpen] = useState(false);
   const [selectedComment, setSelectedComment] = useState(null);
   const [editText, setEditText] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const queryClient = useQueryClient();
 
- 
-  const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this comment?")) return;
-    try {
-      
-      const res = await fetch(`http://localhost:8000/api/comments/${id}?email=${currentUser?.email}`, { 
-        method: "DELETE" 
-      });
-      const json = await res.json();
-      
-      if (json.success) {
+  const { data: queryData } = useQuery({
+    queryKey: ["userComments", currentUser?.email],
+    queryFn: () => commentApi.getUserComments(currentUser.email).then((d) => d.data),
+    enabled: !!currentUser?.email,
+    initialData: { success: true, data: initialComments },
+    placeholderData: { success: true, data: initialComments },
+    staleTime: 30 * 1000,
+  });
+
+  const comments = queryData?.data || [];
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => commentApi.remove(id, currentUser?.email),
+    onSuccess: (result) => {
+      if (result.data.success) {
         toast.success("Comment deleted successfully!");
-        setComments(comments.filter(c => c._id !== id));
+        queryClient.invalidateQueries({ queryKey: ["userComments"] });
       } else {
-        toast.error(json.message || "Failed to delete.");
+        toast.error(result.data.message || "Failed to delete.");
       }
-    } catch (err) {
-      console.error(err);
+    },
+    onError: () => {
+      console.error("Delete error");
       toast.error("Something went wrong!");
-    }
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: () =>
+      commentApi.update(selectedComment._id, {
+        commentText: editText,
+        userEmail: currentUser?.email,
+      }),
+    onSuccess: (result) => {
+      if (result.data.success) {
+        toast.success("Comment updated successfully!");
+        queryClient.invalidateQueries({ queryKey: ["userComments"] });
+        setIsOpen(false);
+      } else {
+        toast.error(result.data.message || "Update failed.");
+      }
+    },
+    onError: () => {
+      console.error("Update error");
+      toast.error("Update failed.");
+    },
+  });
+
+  const handleDelete = (id) => {
+    if (!confirm("Are you sure you want to delete this comment?")) return;
+    deleteMutation.mutate(id);
   };
 
-  
   const openEditModal = (comment) => {
     setSelectedComment(comment);
     setEditText(comment.commentText);
     setIsOpen(true);
   };
 
-
-  const handleUpdate = async () => {
+  const handleUpdate = () => {
     if (!editText.trim()) return toast.error("Comment cannot be empty!");
-    setSubmitting(true);
-    try {
-      const res = await fetch(`http://localhost:8000/api/comments/${selectedComment._id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-       
-        body: JSON.stringify({ 
-          commentText: editText,
-          userEmail: currentUser?.email 
-        }),
-      });
-      const json = await res.json();
-      
-      if (json.success) {
-        toast.success("Comment updated successfully!");
-       
-        setComments(comments.map(c => c._id === selectedComment._id ? { ...c, commentText: editText } : c));
-        setIsOpen(false);
-      } else {
-        toast.error(json.message || "Update failed.");
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Update failed.");
-    } finally {
-      setSubmitting(false);
-    }
+    updateMutation.mutate();
   };
 
   return (
@@ -106,23 +110,24 @@ export default function UserCommentsClient({ initialComments = [], currentUser }
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-xs text-slate-400 inline-flex items-center gap-1.5">
                         <Calendar size={13} className="text-slate-500" />
-                        {new Date(comment.createdAt).toLocaleDateString("en-US", { 
-                          year: "numeric", 
-                          month: "short", 
-                          day: "numeric" 
+                        {new Date(comment.createdAt).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
                         })}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right whitespace-nowrap">
                       <div className="flex justify-end gap-2">
-                        <Button 
+                        <Button
                           isIconOnly size="sm" variant="flat" color="warning"
                           onClick={() => openEditModal(comment)}
                         >
                           <Edit2 size={14} />
                         </Button>
-                        <Button 
+                        <Button
                           isIconOnly size="sm" variant="flat" color="danger"
+                          isLoading={deleteMutation.isPending}
                           onClick={() => handleDelete(comment._id)}
                         >
                           <Trash2 size={14} />
@@ -137,18 +142,16 @@ export default function UserCommentsClient({ initialComments = [], currentUser }
         </div>
       )}
 
-      {/* 📝 পপ-আপ মোডাল */}
-      <Modal 
-        isOpen={isOpen} 
-        onClose={() => setIsOpen(false)} 
-        placement="center" 
-        backdrop="blur" 
+      <Modal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        placement="center"
+        backdrop="blur"
         className="dark text-white bg-[#0B1524] border border-slate-800 rounded-2xl p-2"
       >
         <div className="w-full">
           <ModalHeader className="flex flex-col gap-1 text-xl font-bold">Update Comment</ModalHeader>
           <ModalBody>
-           
             <TextArea
               label="Your Review"
               variant="bordered"
@@ -162,7 +165,7 @@ export default function UserCommentsClient({ initialComments = [], currentUser }
             <Button variant="flat" color="danger" onClick={() => setIsOpen(false)}>
               Cancel
             </Button>
-            <Button color="warning" isLoading={submitting} onClick={handleUpdate} className="font-bold text-slate-900">
+            <Button color="warning" isLoading={updateMutation.isPending} onClick={handleUpdate} className="font-bold text-slate-900">
               Save Changes
             </Button>
           </ModalFooter>

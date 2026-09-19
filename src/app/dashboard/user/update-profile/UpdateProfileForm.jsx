@@ -6,21 +6,38 @@ import Link from "next/link";
 import Image from "next/image"; 
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { userApi } from "@/lib/api";
 
 export default function UpdateProfileForm({ user }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [name, setName] = useState(user?.name || "");
   const [image, setImage] = useState(user?.image || "");
   const [uploading, setUploading] = useState(false);
-  const [saving, setSaving] = useState(false);
-
-  const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
-  
   
   const defaultAvatar = "https://i.ibb.co/0V6v4LK/default-avatar.png";
 
- 
   const displayImage = image && !image.includes("googleusercontent") ? image : defaultAvatar;
+
+  const updateMutation = useMutation({
+    mutationFn: () => userApi.updateProfile(user.email, { name, image }),
+    onSuccess: (result) => {
+      const data = result.data;
+      if (data.acknowledged || data.modifiedCount > 0 || data.upsertedCount > 0) {
+        toast.success("Profile updated successfully!");
+        queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+        router.refresh();
+        setTimeout(() => {
+          router.push("/dashboard/user");
+        }, 400);
+      } else {
+        toast.error("No changes made");
+        router.push("/dashboard/user");
+      }
+    },
+    onError: () => toast.error("Update failed"),
+  });
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -37,7 +54,7 @@ export default function UpdateProfileForm({ user }) {
       });
       const imgData = await res.json();
       if (imgData.success) {
-        setImage(imgData.data.display_url); // আপলোড সফল হলে ImgBB লিংক স্টেটে সেট হবে
+        setImage(imgData.data.display_url);
         toast.success("Avatar uploaded!");
       }
     } catch (err) {
@@ -47,34 +64,9 @@ export default function UpdateProfileForm({ user }) {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setSaving(true);
-
-    try {
-      const res = await fetch(`${NEXT_PUBLIC_BASE_URL}/user/update-profile/${encodeURIComponent(user.email)}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, image }),
-      });
-
-      const data = await res.json();
-      
-      if (data.acknowledged || data.modifiedCount > 0 || data.upsertedCount > 0) {
-        toast.success("Profile updated successfully!");
-        router.refresh();
-        setTimeout(() => {
-          router.push("/dashboard/user");
-        }, 400);
-      } else {
-        toast.error("No changes made");
-        router.push("/dashboard/user");
-      }
-    } catch (err) {
-      toast.error("Update failed");
-    } finally {
-      setSaving(false);
-    }
+    updateMutation.mutate();
   };
 
   return (
@@ -129,8 +121,8 @@ export default function UpdateProfileForm({ user }) {
           <input type="email" disabled value={user?.email || ""} className="w-full px-4 py-2.5 bg-[#0B1524]/50 border border-slate-800 rounded-xl text-sm text-slate-500 cursor-not-allowed" />
         </div>
 
-        <Button type="submit" disabled={uploading || saving} className="w-full bg-sky-500 hover:bg-sky-600 disabled:bg-slate-700 text-slate-900 font-bold mt-2" radius="xl">
-          {saving ? "Saving..." : "Save Profile"}
+        <Button type="submit" disabled={uploading || updateMutation.isPending} className="w-full bg-sky-500 hover:bg-sky-600 disabled:bg-slate-700 text-slate-900 font-bold mt-2" radius="xl">
+          {updateMutation.isPending ? "Saving..." : "Save Profile"}
         </Button>
       </form>
     </Card>

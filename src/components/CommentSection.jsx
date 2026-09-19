@@ -2,72 +2,85 @@
 
 import { useState } from "react";
 import Swal from "sweetalert2";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Trash2, Edit2, Check, X, MessageSquare } from "lucide-react";
+import { commentApi } from "@/lib/api";
 
 export default function CommentSection({ lawyerId, currentUser, initialComments = [] }) {
- 
-  const [comments, setComments] = useState(initialComments);
   const [newComment, setNewComment] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState("");
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
 
+  const { data, isLoading } = useQuery({
+    queryKey: ["comments", lawyerId],
+    queryFn: () => commentApi.getForLawyer(lawyerId).then((d) => d.data),
+    initialData: { success: true, data: initialComments },
+    placeholderData: { success: true, data: initialComments },
+    staleTime: 30 * 1000,
+  });
 
-  const handleSubmitComment = async (e) => {
-    e.preventDefault();
-    if (!newComment.trim()) return;
+  const comments = data?.data || [];
 
-    setLoading(true);
-    try {
-      const res = await fetch("http://localhost:8000/api/comments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          lawyerId,
-          userEmail: currentUser.email,
-          userName: currentUser.name || "Anonymous",
-          commentText: newComment,
-        }),
-      });
-
-      const resData = await res.json();
-      if (res.ok && resData.success) {
-        setComments([resData.data, ...comments]); 
+  const createMutation = useMutation({
+    mutationFn: () =>
+      commentApi.create({
+        lawyerId,
+        userEmail: currentUser.email,
+        userName: currentUser.name || "Anonymous",
+        commentText: newComment,
+      }),
+    onSuccess: (result) => {
+      if (result.res.ok && result.data.success) {
+        queryClient.invalidateQueries({ queryKey: ["comments", lawyerId] });
         setNewComment("");
         Swal.fire("Success", "Comment added successfully!", "success");
       } else {
-        Swal.fire("Hold on!", resData.message || "Failed to add comment.", "warning");
+        Swal.fire("Hold on!", result.data?.message || "Failed to add comment.", "warning");
       }
-    } catch (err) {
-      Swal.fire("Error", "Server connection failed.", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    onError: () => Swal.fire("Error", "Server connection failed.", "error"),
+  });
 
-
-  const handleUpdateComment = async (id) => {
-    if (!editText.trim()) return;
-
-    try {
-      const res = await fetch(`http://localhost:8000/api/comments/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ commentText: editText, userEmail: currentUser.email }),
-      });
-
-      if (res.ok) {
-        setComments(comments.map(c => c._id === id ? { ...c, commentText: editText } : c));
+  const updateMutation = useMutation({
+    mutationFn: (id) =>
+      commentApi.update(id, {
+        commentText: editText,
+        userEmail: currentUser.email,
+      }),
+    onSuccess: (result) => {
+      if (result.data.success) {
+        queryClient.invalidateQueries({ queryKey: ["comments", lawyerId] });
         setEditingId(null);
         Swal.fire("Updated", "Your comment has been updated.", "success");
       }
-    } catch (err) {
-      Swal.fire("Error", "Failed to update comment.", "error");
-    }
+    },
+    onError: () => Swal.fire("Error", "Failed to update comment.", "error"),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => commentApi.remove(id, currentUser.email),
+    onSuccess: (result) => {
+      if (result.data.success) {
+        queryClient.invalidateQueries({ queryKey: ["comments", lawyerId] });
+        Swal.fire("Deleted!", "Your comment has been deleted.", "success");
+      }
+    },
+    onError: () => Swal.fire("Error", "Failed to delete comment.", "error"),
+  });
+
+  const handleSubmitComment = (e) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+    createMutation.mutate();
   };
 
-  
-  const handleDeleteComment = async (id) => {
+  const handleUpdateComment = (id) => {
+    if (!editText.trim()) return;
+    updateMutation.mutate(id);
+  };
+
+  const handleDeleteComment = (id) => {
     Swal.fire({
       title: "Are you sure?",
       text: "You won't be able to revert this!",
@@ -75,23 +88,10 @@ export default function CommentSection({ lawyerId, currentUser, initialComments 
       showCancelButton: true,
       confirmButtonColor: "#ef4444",
       cancelButtonColor: "#64748b",
-      confirmButtonText: "Yes, delete it!"
-    }).then(async (result) => {
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
       if (result.isConfirmed) {
-        try {
-          const res = await fetch(`http://localhost:8000/api/comments/${id}`, {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userEmail: currentUser.email }),
-          });
-
-          if (res.ok) {
-            setComments(comments.filter(c => c._id !== id));
-            Swal.fire("Deleted!", "Your comment has been deleted.", "success");
-          }
-        } catch (err) {
-          Swal.fire("Error", "Failed to delete comment.", "error");
-        }
+        deleteMutation.mutate(id);
       }
     });
   };
@@ -102,7 +102,6 @@ export default function CommentSection({ lawyerId, currentUser, initialComments 
         <MessageSquare className="text-amber-500" size={22} /> Reviews & Comments ({comments.length})
       </h3>
 
-      {/* কমেন্ট সাবমিট করার ফর্ম */}
       {currentUser ? (
         <form onSubmit={handleSubmitComment} className="space-y-3">
           <textarea
@@ -114,10 +113,10 @@ export default function CommentSection({ lawyerId, currentUser, initialComments 
           />
           <button
             type="submit"
-            disabled={loading}
+            disabled={createMutation.isPending}
             className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm rounded-xl transition-all disabled:opacity-50"
           >
-            {loading ? "Posting..." : "Post Comment"}
+            {createMutation.isPending ? "Posting..." : "Post Comment"}
           </button>
         </form>
       ) : (
@@ -126,9 +125,10 @@ export default function CommentSection({ lawyerId, currentUser, initialComments 
         </p>
       )}
 
-      {/* কমেন্ট দেখানোর এরিয়া */}
       <div className="space-y-4 pt-4 border-t border-slate-100">
-        {comments.length === 0 ? (
+        {isLoading && comments.length === 0 ? (
+          <p className="text-sm text-slate-400 italic">Loading reviews...</p>
+        ) : comments.length === 0 ? (
           <p className="text-sm text-slate-400 italic">No reviews yet for this lawyer.</p>
         ) : (
           comments.map((comment) => (
@@ -137,15 +137,14 @@ export default function CommentSection({ lawyerId, currentUser, initialComments 
                 <div>
                   <h4 className="font-bold text-sm text-slate-800">{comment.userName}</h4>
                   <p className="text-xs text-slate-400">
-  {new Date(comment.createdAt).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric"
-  })}
-</p>
+                    {new Date(comment.createdAt).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </p>
                 </div>
 
-                {/* এডিট-ডিলিট অ্যাকশন কন্ট্রোল */}
                 {currentUser && currentUser.email === comment.userEmail && (
                   <div className="flex items-center gap-2">
                     {editingId === comment._id ? (
@@ -163,7 +162,6 @@ export default function CommentSection({ lawyerId, currentUser, initialComments 
                 )}
               </div>
 
-              {/* কমেন্ট কন্টেন্ট বডি */}
               {editingId === comment._id ? (
                 <input
                   type="text"

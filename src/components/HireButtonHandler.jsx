@@ -1,92 +1,79 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth-client";
 import { loadStripe } from "@stripe/stripe-js";
-import { AlertCircle, X } from "lucide-react"; // আইকন ব্যবহারের জন্য
+import { AlertCircle, X } from "lucide-react";
+import { hiringApi } from "@/lib/api";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
 export default function HireButtonHandler({ lawyer }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [hiringStatus, setHiringStatus] = useState("none"); 
-  const [existingHiringId, setExistingHiringId] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false); // 💡 মোডাল স্টেট ম্যানেজমেন্ট
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: session } = authClient.useSession();
   const user = session?.user;
   const isAuthenticated = !!user;
 
-  useEffect(() => {
-    if (isAuthenticated && user?.email && lawyer?._id) {
-      fetch(`http://localhost:8000/api/hiring/client/${user.email}`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success && data.data) {
-            const specificHiring = data.data.find(
-              (item) => item.lawyerId === lawyer._id.toString()
-            );
-            
-            if (specificHiring) {
-              setHiringStatus(specificHiring.status); 
-              setExistingHiringId(specificHiring._id);
-            }
-          }
-        })
-        .catch((err) => console.error("Error checking hiring status:", err));
-    }
-  }, [isAuthenticated, user, lawyer]);
+  const { data: hiringHistory } = useQuery({
+    queryKey: ["hiringHistory", user?.email],
+    queryFn: () => hiringApi.getClientHistory(user.email).then((d) => d.data),
+    enabled: isAuthenticated && !!user?.email,
+    staleTime: 30 * 1000,
+  });
 
-  // 💡 আসল রিকোয়েস্ট ফাংশন যা মোডাল কনফার্মেশনের পর কল হবে
-  const confirmHireRequest = async () => {
-    setIsModalOpen(false); // মোডাল বন্ধ করা হলো
-    setIsSubmitting(true);
-
-    const hiringData = {
-      lawyerId: lawyer._id.toString(),
-      lawyerName: lawyer.name,
-      lawyerEmail: lawyer.email,
-      specialization: lawyer.specialization,
-      fee: lawyer.hourlyRate || lawyer.fee,
-      clientEmail: user.email,
-      clientName: user.name,
-      status: "pending",
-      requestDate: new Date(),
+  const { hiringStatus, existingHiringId } = useMemo(() => {
+    if (!hiringHistory?.data) return { hiringStatus: "none", existingHiringId: null };
+    const specificHiring = hiringHistory.data.find(
+      (item) => item.lawyerId === lawyer._id.toString()
+    );
+    return {
+      hiringStatus: specificHiring ? specificHiring.status : "none",
+      existingHiringId: specificHiring ? specificHiring._id : null,
     };
+  }, [hiringHistory, lawyer._id]);
 
-    try {
-      const res = await fetch("http://localhost:8000/api/hiring/request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(hiringData),
-      });
-
-      const data = await res.json();
-      if (data.success) {
+  const confirmHireMutation = useMutation({
+    mutationFn: () =>
+      hiringApi.createRequest({
+        lawyerId: lawyer._id.toString(),
+        lawyerName: lawyer.name,
+        lawyerEmail: lawyer.email,
+        specialization: lawyer.specialization,
+        fee: lawyer.hourlyRate || lawyer.fee,
+        clientEmail: user.email,
+        clientName: user.name,
+        status: "pending",
+        requestDate: new Date(),
+      }),
+    onSuccess: (data) => {
+      if (data.data?.success) {
         toast.success("Hiring request sent! Waiting for lawyer's approval.");
-        setHiringStatus("pending");
-       
-        if (data.data?._id || data.hiringId) {
-          setExistingHiringId(data.data?._id || data.hiringId);
-        }
+        queryClient.invalidateQueries({ queryKey: ["hiringHistory"] });
       } else {
-        toast.error(data.error || "Something went wrong");
+        toast.error(data.data?.error || "Something went wrong");
       }
-    } catch (error) {
-      toast.error("Failed to send request");
-    } finally {
-      setIsSubmitting(false);
-    }
+    },
+    onError: () => toast.error("Failed to send request"),
+    onSettled: () => setIsSubmitting(false),
+  });
+
+  const confirmHireRequest = () => {
+    setIsModalOpen(false);
+    setIsSubmitting(true);
+    confirmHireMutation.mutate();
   };
 
-  // বাটনে ক্লিক করার ইনিশিয়াল হ্যান্ডলার
   const handleHireClick = () => {
     if (!isAuthenticated) {
       toast.error("Please login to hire a lawyer!");
       return;
     }
-    setIsModalOpen(true); // সরাসরি এপিআই কল না করে মোডাল ওপেন করা হবে
+    setIsModalOpen(true);
   };
 
   const handleStripePayment = async () => {
@@ -99,14 +86,14 @@ export default function HireButtonHandler({ lawyer }) {
     try {
       const response = await fetch("/api/payment", {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json" 
+        headers: {
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           hiringId: existingHiringId,
           lawyerId: lawyer._id.toString(),
           clientEmail: user.email,
-          amount: lawyer.hourlyRate || lawyer.fee, 
+          amount: lawyer.hourlyRate || lawyer.fee,
           lawyerName: lawyer.name,
         }),
       });
@@ -149,7 +136,7 @@ export default function HireButtonHandler({ lawyer }) {
     if (hiringStatus === "paid") return { text: "✓ Hired & Paid", disabled: true, className: "bg-emerald-100 text-emerald-700 border border-emerald-300 cursor-not-allowed", action: null };
     if (hiringStatus === "accepted") return { text: "Pay to Confirm Hiring", disabled: false, className: "bg-emerald-500 hover:bg-emerald-600 text-white font-bold shadow-emerald-500/20", action: handleStripePayment };
     if (lawyer.status !== "Available") return { text: "Lawyer Unavailable", disabled: true, className: "bg-slate-300 text-slate-500 cursor-not-allowed", action: null };
-    
+
     return { text: "Send Hiring Request", disabled: false, className: "bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold shadow-amber-500/20", action: handleHireClick };
   };
 
@@ -166,16 +153,15 @@ export default function HireButtonHandler({ lawyer }) {
       >
         {btnConfig.text}
       </motion.button>
-      
+
       <p className="text-center text-xs text-slate-400 mt-3">
-        {hiringStatus === "accepted" 
-          ? "* Lawyer has approved your request! Click above to pay via Stripe." 
+        {hiringStatus === "accepted"
+          ? "* Lawyer has approved your request! Click above to pay via Stripe."
           : hiringStatus === "paid"
           ? "* You have hired this lawyer. Check details in your dashboard."
           : "* Clicking will send a request to the lawyer. Once they accept, you can process the secure payment."}
       </p>
 
-      {/* 🔮 কনফার্মেশন মোডাল এলিমেন্ট (Framer Motion অ্যানিমেশন সহ) */}
       <AnimatePresence>
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
@@ -185,31 +171,28 @@ export default function HireButtonHandler({ lawyer }) {
               exit={{ opacity: 0, scale: 0.95 }}
               className="w-full max-w-md overflow-hidden bg-[#152238] border border-slate-800 rounded-2xl p-6 text-slate-200 shadow-2xl relative"
             >
-              {/* ক্লোজ ক্রস বাটন */}
-              <button 
+              <button
                 onClick={() => setIsModalOpen(false)}
                 className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"
               >
                 <X size={20} />
               </button>
 
-              {/* মোডাল বডি */}
               <div className="flex flex-col items-center text-center space-y-4">
                 <div className="p-3 bg-amber-500/10 text-amber-500 rounded-full">
                   <AlertCircle size={32} />
                 </div>
-                
+
                 <h3 className="text-xl font-bold text-white tracking-tight">
                   Confirm Hiring Request
                 </h3>
-                
+
                 <p className="text-sm text-slate-400 leading-relaxed">
-                  Are you sure you want to send a formal hiring request to <strong className="text-sky-400">{lawyer.name}</strong>? 
+                  Are you sure you want to send a formal hiring request to <strong className="text-sky-400">{lawyer.name}</strong>?
                   Once approved, you will be required to pay the consulting fee of <strong className="text-emerald-400">${lawyer.hourlyRate || lawyer.fee}</strong>.
                 </p>
               </div>
 
-              {/* মোডাল অ্যাকশন বাটনসমূহ */}
               <div className="flex items-center gap-3 mt-6">
                 <button
                   onClick={() => setIsModalOpen(false)}

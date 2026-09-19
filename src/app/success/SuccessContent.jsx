@@ -12,7 +12,7 @@ export default function SuccessContent() {
 
   const [isVerifying, setIsVerifying] = useState(false);
 
-  const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+  const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   const handleVerifyPayment = async () => {
     if (!sessionId || !email) {
@@ -24,7 +24,7 @@ export default function SuccessContent() {
 
     try {
       const res = await fetch(
-        `${NEXT_PUBLIC_BASE_URL}/api/payment/confirm?session_id=${sessionId}&email=${email}`,
+        `${NEXT_PUBLIC_API_URL}/api/payment/confirm?session_id=${sessionId}&email=${email}`,
         {
           method: "POST",
         }

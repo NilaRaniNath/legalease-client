@@ -1,55 +1,47 @@
-
 "use client";
 
 import { Button } from "@heroui/react";
 import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { lawyerApi } from "@/lib/api";
 
 export default function DeleteServiceButton({ userId }) {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
 
-  const handleDelete = async () => {
+  const deleteMutation = useMutation({
+    mutationFn: () => lawyerApi.deleteProfile(userId),
+    onSuccess: (data) => {
+      if (data.data?.success) {
+        queryClient.invalidateQueries({ queryKey: ["lawyerProfile"] });
+        router.refresh();
+      } else {
+        alert(data.data?.error || "Something went wrong!");
+      }
+    },
+    onError: () => alert("Failed to connect to the server."),
+  });
+
+  const handleDelete = () => {
     const confirmDelete = window.confirm(
       "Are you sure you want to delete your legal service profile? This will remove you from the public directory."
     );
 
     if (!confirmDelete) return;
-
-    try {
-      setLoading(true);
-      const res = await fetch(`http://localhost:8000/api/lawyer/profile/${userId}`, {
-        method: "DELETE",
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        alert("Service deleted successfully!");
-        
-        router.refresh(); 
-      } else {
-        alert(data.error || "Something went wrong!");
-      }
-    } catch (err) {
-      console.error("Delete error:", err);
-      alert("Failed to connect to the server.");
-    } finally {
-      setLoading(false);
-    }
+    deleteMutation.mutate();
   };
 
   return (
-    <Button 
-      size="sm" 
-      variant="light" 
-      className="text-red-400 hover:bg-red-500/10" 
+    <Button
+      size="sm"
+      variant="light"
+      className="text-red-400 hover:bg-red-500/10"
       isIconOnly
-      isLoading={loading}
+      isLoading={deleteMutation.isPending}
       onClick={handleDelete}
     >
-      {!loading && <Trash2 className="w-4 h-4" />}
+      {!deleteMutation.isPending && <Trash2 className="w-4 h-4" />}
     </Button>
   );
 }

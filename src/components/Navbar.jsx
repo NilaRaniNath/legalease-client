@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { authClient } from '@/lib/auth-client';
@@ -16,12 +16,15 @@ export default function Navbar() {
   const { data: session, isPending } = authClient.useSession();
   const user = session?.user;
 
-  // console.log("session",session)
+  const lastUserIdRef = useRef(null);
   useEffect(() => {
-    if (user) {
+    const userId = user?.id ?? null;
+    const hadUser = lastUserIdRef.current !== null;
+    lastUserIdRef.current = userId;
+    if (!hadUser && userId !== null) {
       router.refresh();
     }
-  }, [user, router]);
+  }, [user?.id, router]);
 
   // সার্চ হ্যান্ডলার
   const handleSearch = (e) => {
@@ -95,6 +98,14 @@ export default function Navbar() {
               }`}
             >
               Browse Lawyers
+            </Link>
+            <Link
+              href="/ai-recommend"
+              className={`text-sm font-medium transition-colors ${
+                isActive('/ai-recommend') ? 'text-blue-600 font-semibold' : 'text-gray-600 hover:text-blue-600'
+              }`}
+            >
+              AI Legal Help
             </Link>
 
             {isPending ? (
@@ -219,6 +230,13 @@ export default function Navbar() {
             className={`block py-2 text-base font-medium ${isActive('/browse-lawyers') ? 'text-blue-600 font-semibold' : 'text-gray-700'}`}
           >
             Browse Lawyers
+          </Link>
+          <Link
+            href="/ai-recommend"
+            onClick={() => setIsOpen(false)}
+            className={`block py-2 text-base font-medium ${isActive('/ai-recommend') ? 'text-blue-600 font-semibold' : 'text-gray-700'}`}
+          >
+            AI Legal Help
           </Link>
 
           {/* মোবাইল রোল-বেসড ড্যাশবোর্ড এবং লগআউট লিংক */}

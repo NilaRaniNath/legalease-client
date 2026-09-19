@@ -1,10 +1,10 @@
 import { Card, Chip, Button } from "@heroui/react";
-import { Briefcase, DollarSign, Search, ArrowUpRight, ArrowLeft, ArrowRight } from "lucide-react";
+import { Briefcase, DollarSign, Search, ArrowUpRight, ArrowLeft, ArrowRight, Sparkles, Scale } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 
- const NEXT_PUBLIC_BASE_URL=process.env.NEXT_PUBLIC_BASE_URL;
+ const NEXT_PUBLIC_API_URL=process.env.NEXT_PUBLIC_API_URL;
 
 async function getLawyers(resolvedParams) {
   try {
@@ -17,7 +17,7 @@ async function getLawyers(resolvedParams) {
       limit: "6",
     });
 
-    const res = await fetch(`${NEXT_PUBLIC_BASE_URL}/api/lawyer/all?${queryParams.toString()}`, {
+    const res = await fetch(`${NEXT_PUBLIC_API_URL}/api/lawyer/all?${queryParams.toString()}`, {
       cache: "no-store", 
     });
     
@@ -60,6 +60,32 @@ export default async function BrowseLawyersPage({ searchParams }) {
           </h1>
           <p className="text-xs text-slate-400 mt-0.5">Search, filter, and hire expert legal counsel in real-time.</p>
         </div>
+
+        {/* AI স্মার্ট রিকমেন্ডেশন ব্যানার */}
+        <Link
+          href="/ai-recommend"
+          className="block bg-gradient-to-r from-sky-500/10 via-blue-500/10 to-indigo-500/10 border border-sky-500/30 rounded-2xl p-5 hover:border-sky-500/60 transition-colors group"
+        >
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-sky-500/10 text-sky-400 rounded-2xl border border-sky-500/20 group-hover:bg-sky-500/20 transition-colors">
+                <Sparkles className="w-6 h-6" />
+              </div>
+              <div className="text-left">
+                <p className="font-bold text-white flex items-center gap-2">
+                  Not sure what type of lawyer you need?
+                  <Scale className="w-4 h-4 text-sky-400 hidden sm:inline" />
+                </p>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Describe your situation to our AI Legal Issue Analyzer and get matched with the right verified expert.
+                </p>
+              </div>
+            </div>
+            <Button size="sm" className="bg-sky-500 hover:bg-sky-600 text-slate-900 font-bold" radius="xl" endContent={<ArrowUpRight className="w-4 h-4" />}>
+              Try AI Analyzer
+            </Button>
+          </div>
+        </Link>
 
         {/* সার্চ এবং ফিল্টারিং প্যানেল */}
         <form method="GET" className="bg-[#152238] p-5 rounded-2xl border border-slate-800 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end text-left">

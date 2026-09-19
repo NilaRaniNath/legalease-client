@@ -5,13 +5,15 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import Image from "next/image";
 import DeleteServiceButton from "@/components/DeleteServiceButton";
+import AvailabilityManager from "@/components/AvailabilityManager";
+import BookingManager from "@/components/BookingManager";
 
-  const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+  const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 
 async function getDashboardProfile(userEmail) {
   try {
-    const res = await fetch(`${NEXT_PUBLIC_BASE_URL}/api/lawyer/profile?email=${encodeURIComponent(userEmail)}`, {
+    const res = await fetch(`${NEXT_PUBLIC_API_URL}/api/lawyer/profile?email=${encodeURIComponent(userEmail)}`, {
       cache: "no-store",
     });
 
@@ -145,6 +147,12 @@ export default async function DashboardPage() {
                 </table>
               </div>
             </div>
+
+            {/* ৩. অ্যাভেইলেবিলিটি শিডিউল ম্যানেজার */}
+            <AvailabilityManager />
+
+            {/* ৪. বুকিং রিকোয়েস্ট ম্যানেজার */}
+            <BookingManager />
           </>
         )}
       </div>

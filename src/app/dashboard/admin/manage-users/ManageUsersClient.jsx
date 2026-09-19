@@ -1,47 +1,49 @@
 "use client";
-import React, { useState } from "react";
+import React from "react";
 import { Button } from "@heroui/react";
 import { Trash2, Users } from "lucide-react";
 import toast from "react-hot-toast";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { adminApi } from "@/lib/api";
 
 export default function ManageUsersClient({ initialUsers = [] }) {
-  const [users, setUsers] = useState(initialUsers);
+  const queryClient = useQueryClient();
 
-const NEXT_PUBLIC_BASE_URL=process.env.NEXT_PUBLIC_BASE_URL;
+  const users = initialUsers;
 
-  const handleRoleChange = async (userId, newRole) => {
-    try {
-      const res = await fetch(`${NEXT_PUBLIC_BASE_URL}/api/users/${userId}/role`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role: newRole }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success(`Role updated to ${newRole}`);
-        setUsers(users.map(u => u._id === userId ? { ...u, role: newRole } : u));
+  const roleMutation = useMutation({
+    mutationFn: ({ userId, newRole }) => adminApi.changeRole(userId, newRole),
+    onSuccess: (result, variables) => {
+      if (result.data.success) {
+        toast.success(`Role updated to ${variables.newRole}`);
+        queryClient.invalidateQueries({ queryKey: ["adminUsers"] });
       } else {
-        toast.error(data.message || "Failed to update role");
+        toast.error(result.data.message || "Failed to update role");
       }
-    } catch (err) {
-      toast.error("Network error occurred.");
-    }
+    },
+    onError: () => toast.error("Network error occurred."),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (userId) => adminApi.deleteUser(userId),
+    onSuccess: (result) => {
+      if (result.data.success) {
+        toast.success("User removed successfully!");
+        queryClient.invalidateQueries({ queryKey: ["adminUsers"] });
+      } else {
+        toast.error(result.data.message || "Failed to delete");
+      }
+    },
+    onError: () => toast.error("Something went wrong!"),
+  });
+
+  const handleRoleChange = (userId, newRole) => {
+    roleMutation.mutate({ userId, newRole });
   };
 
-  const handleDeleteUser = async (userId) => {
+  const handleDeleteUser = (userId) => {
     if (!confirm("Are you sure you want to delete this user?")) return;
-    try {
-      const res = await fetch(`${NEXT_PUBLIC_BASE_URL}/api/users/${userId}`, { method: "DELETE" });
-      const data = await res.json();
-      if (data.success) {
-        toast.success("User removed successfully!");
-        setUsers(users.filter(u => u._id !== userId));
-      } else {
-        toast.error(data.message || "Failed to delete");
-      }
-    } catch (err) {
-      toast.error("Something went wrong!");
-    }
+    deleteMutation.mutate(userId);
   };
 
   return (
@@ -70,7 +72,7 @@ const NEXT_PUBLIC_BASE_URL=process.env.NEXT_PUBLIC_BASE_URL;
                   <td className="px-6 py-4 text-slate-400">{user.email}</td>
                   <td className="px-6 py-4">
                     <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
-                      user.role === 'admin' ? 'bg-red-500/20 text-red-400' : 
+                      user.role === 'admin' ? 'bg-red-500/20 text-red-400' :
                       user.role === 'lawyer' ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400'
                     }`}>
                       {user.role}
@@ -88,7 +90,7 @@ const NEXT_PUBLIC_BASE_URL=process.env.NEXT_PUBLIC_BASE_URL;
                     </select>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <Button isIconOnly size="sm" variant="flat" color="danger" onClick={() => handleDeleteUser(user._id)}>
+                    <Button isIconOnly size="sm" variant="flat" color="danger" isLoading={deleteMutation.isPending} onClick={() => handleDeleteUser(user._id)}>
                       <Trash2 size={14} />
                     </Button>
                   </td>

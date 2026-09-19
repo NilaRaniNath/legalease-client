@@ -3,6 +3,7 @@
 import { useState, Suspense } from "react"; // 
 import { useSearchParams } from "next/navigation";
 import Swal from "sweetalert2";
+import { apiPost } from "@/lib/api/client";
 
 
 function PaymentSuccessContent() {
@@ -20,14 +21,9 @@ function PaymentSuccessContent() {
     setIsVerifying(true);
 
     try {
-    
-      const res = await fetch("http://localhost:8000/api/payment/confirm-hiring", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ session_id: sessionId }),
+      const { res, data } = await apiPost("/api/payment/confirm-hiring", {
+        session_id: sessionId,
       });
-
-      const data = await res.json();
       setIsVerifying(false);
 
       if (data.success) {

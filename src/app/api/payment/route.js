@@ -19,6 +19,11 @@ export async function POST(req) {
     }
 
    
+    const origin =
+      new URL(req.url).origin ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      "http://localhost:3000";
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
@@ -35,14 +40,11 @@ export async function POST(req) {
           quantity: 1,
         },
       ],
-      
-     
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-      
-     
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard/user/hiring-history?canceled=true`,
-      
-      
+
+      success_url: `${origin}/dashboard/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+
+      cancel_url: `${origin}/dashboard/user/hiring-history?canceled=true`,
+
       metadata: {
         hiringId: hiringId,
         lawyerId: lawyerId,

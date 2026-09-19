@@ -1,11 +1,16 @@
 "use client";
 import React, { useState } from "react";
 import { Button, Chip } from "@heroui/react";
-import { ShieldAlert, CreditCard, Calendar, User } from "lucide-react";
+import { ShieldAlert, CreditCard, Calendar, User, MessageCircle, Gavel, PlusCircle } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { loadStripe } from "@stripe/stripe-js";
-import { useRouter } from "next/navigation"; // 💡 ১. Next.js রাউটার ইম্পোর্ট করা হলো
+import { useRouter } from "next/navigation";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { authClient } from "@/lib/auth-client";
+import ChatWindow from "@/components/ChatWindow";
+import CaseTimeline from "@/components/CaseTimeline";
+import { caseApi } from "@/lib/api";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
@@ -18,7 +23,46 @@ const statusColorMap = {
 
 export default function HiringHistoryClient({ initialHistory = [] }) {
   const [loadingId, setLoadingId] = useState(null);
-  const router = useRouter(); // 💡 ২. রাউটার ইনিশিয়ালাইজ করা হলো
+  const [activeChat, setActiveChat] = useState(null);
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
+  const { data: session } = authClient.useSession();
+  const currentUser = session?.user;
+
+  const casesQuery = useQuery({
+    queryKey: ["cases", currentUser?.id],
+    queryFn: () =>
+      caseApi
+        .listForUser(currentUser.id, currentUser.email)
+        .then((r) => r.data?.data || []),
+    enabled: Boolean(currentUser?.id),
+    staleTime: 30 * 1000,
+  });
+  const casesList = casesQuery.data || [];
+  const paidHirings = initialHistory.filter((item) => item.status === "paid");
+
+  const createCaseMutation = useMutation({
+    mutationFn: (item) =>
+      caseApi.create({
+        hiringId: item._id,
+        clientUserId: currentUser.id,
+        clientEmail: currentUser.email,
+        clientName: item.clientName || currentUser.name,
+        lawyerEmail: item.lawyerEmail,
+        lawyerName: item.lawyerName,
+        title: `Case with ${item.lawyerName} - ${item.specialization || "Legal Matter"}`,
+      }),
+    onSuccess: (result) => {
+      if (result.data.success) {
+        toast.success("Case tracking started! Your timeline is now active.");
+        queryClient.invalidateQueries({ queryKey: ["cases"] });
+      } else {
+        toast.error(result.data.error || "Failed to start case tracking");
+      }
+    },
+    onError: () => toast.error("Could not start case tracking"),
+  });
 
   const handleStripePayment = async (item) => {
     setLoadingId(item._id);
@@ -42,12 +86,10 @@ export default function HiringHistoryClient({ initialHistory = [] }) {
       }
 
       if (sessionData.url) {
-        // 💡 ৩. window.location.href এর বদলে Next.js রাউটার দিয়ে রিডাইরেক্ট করা হলো
-        router.push(sessionData.url); 
+        router.push(sessionData.url);
       } else {
         throw new Error("Stripe checkout URL not found.");
       }
-
     } catch (error) {
       console.error("Stripe Error:", error);
       toast.error(error.message || "Stripe Checkout redirection failed.");
@@ -69,15 +111,25 @@ export default function HiringHistoryClient({ initialHistory = [] }) {
   const renderAction = (item) => {
     if (item.status === "accepted") {
       return (
-        <Button
-          size="sm"
-          isLoading={loadingId === item._id}
-          onClick={() => handleStripePayment(item)} 
-          className="w-full md:w-auto bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-bold shadow-lg shadow-emerald-500/10 text-xs py-2.5"
-          startContent={loadingId !== item._id && <CreditCard size={14} />}
-        >
-          Proceed to Pay
-        </Button>
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 md:justify-end">
+          <Button
+            size="sm"
+            onClick={() => setActiveChat(item)}
+            className="bg-sky-500 hover:bg-sky-600 text-slate-900 font-bold text-xs py-2.5"
+            startContent={<MessageCircle size={14} />}
+          >
+            Chat
+          </Button>
+          <Button
+            size="sm"
+            isLoading={loadingId === item._id}
+            onClick={() => handleStripePayment(item)}
+            className="w-full md:w-auto bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-bold shadow-lg shadow-emerald-500/10 text-xs py-2.5"
+            startContent={loadingId !== item._id && <CreditCard size={14} />}
+          >
+            Proceed to Pay
+          </Button>
+        </div>
       );
     }
     if (item.status === "paid") {
@@ -103,7 +155,6 @@ export default function HiringHistoryClient({ initialHistory = [] }) {
 
   return (
     <div className="w-full text-left">
-      {/* 📱 ১. মোবাইল ভিউ */}
       <div className="block md:hidden space-y-4">
         {initialHistory.map((item) => (
           <div key={item._id.toString()} className="bg-[#152238] border border-slate-800 rounded-xl p-5 space-y-4 shadow-md">
@@ -134,7 +185,6 @@ export default function HiringHistoryClient({ initialHistory = [] }) {
         ))}
       </div>
 
-      {/* 💻 ২. ডেক্সটপ ভিউ */}
       <div className="hidden md:block bg-[#152238] rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
         <table className="w-full text-sm text-slate-300">
           <thead className="text-xs text-slate-400 uppercase bg-[#0B1524] border-b border-slate-800">
@@ -174,6 +224,55 @@ export default function HiringHistoryClient({ initialHistory = [] }) {
           </tbody>
         </table>
       </div>
+
+      {currentUser && paidHirings.length > 0 && (
+        <div className="mt-8 space-y-3">
+          <div className="flex items-center gap-2">
+            <Gavel className="w-5 h-5 text-sky-400" />
+            <h2 className="text-lg font-bold text-white">Case Tracking Timeline</h2>
+          </div>
+          <p className="text-xs text-slate-400">
+            Track the legal milestones for your active (paid) hires. Your lawyer can also update progress here.
+          </p>
+
+          {paidHirings.map((item) => {
+            const caseDoc = casesList.find((c) => c.hiringId === item._id);
+            return (
+              <div key={item._id.toString()} className="space-y-2">
+                {caseDoc ? (
+                  <CaseTimeline caseData={caseDoc} />
+                ) : (
+                  <div className="bg-[#152238] border border-slate-800 rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div>
+                      <h4 className="text-sm font-bold text-white">Case with {item.lawyerName}</h4>
+                      <p className="text-xs text-slate-400 mt-1">
+                        You hired this lawyer. Start tracking the consulting and legal milestones for this matter.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => createCaseMutation.mutate(item)}
+                      disabled={createCaseMutation.isPending}
+                      className="flex items-center gap-1.5 px-4 py-2.5 bg-sky-500 hover:bg-sky-600 text-slate-900 rounded-xl text-xs font-bold transition-colors shrink-0 disabled:opacity-50"
+                    >
+                      <PlusCircle className="w-4 h-4" />
+                      {createCaseMutation.isPending ? "Starting..." : "Start Case Tracking"}
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {activeChat && currentUser && (
+        <ChatWindow
+          hiring={activeChat}
+          currentUserEmail={currentUser.email}
+          currentUserName={currentUser.name}
+          onClose={() => setActiveChat(null)}
+        />
+      )}
     </div>
   );
 }

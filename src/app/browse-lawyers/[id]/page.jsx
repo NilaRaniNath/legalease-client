@@ -1,5 +1,6 @@
 import HireButtonHandler from "@/components/HireButtonHandler";
 import CommentSection from "@/components/CommentSection"; 
+import BookingCalendar from "@/components/BookingCalendar"; 
 import { Calendar, DollarSign, CheckCircle2, XCircle, FileText, LogIn } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -8,11 +9,11 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
 
- const NEXT_PUBLIC_BASE_URL=process.env.NEXT_PUBLIC_BASE_URL;
+ const NEXT_PUBLIC_API_URL=process.env.NEXT_PUBLIC_API_URL;
 
 async function getLawyerDetails(email) {
   try {
-    const res = await fetch(`${NEXT_PUBLIC_BASE_URL}/api/lawyers/email/${email}`, {
+    const res = await fetch(`${NEXT_PUBLIC_API_URL}/api/lawyers/email/${email}`, {
       cache: "no-store",
     });
     if (!res.ok) return null;
@@ -26,7 +27,7 @@ async function getLawyerDetails(email) {
 
 async function getLawyerComments(lawyerId) {
   try {
-    const res = await fetch(`${NEXT_PUBLIC_BASE_URL}/api/comments/${lawyerId}`, {
+    const res = await fetch(`${NEXT_PUBLIC_API_URL}/api/comments/${lawyerId}`, {
       cache: "no-store",
     });
     if (!res.ok) return [];
@@ -80,7 +81,7 @@ export default async function LawyerDetailsPage({ params }) {
   if (currentUser && lawyer) {
     try {
       const checkRes = await fetch(
-        `${NEXT_PUBLIC_BASE_URL}/api/hirings/check?clientEmail=${currentUser.email}&lawyerId=${lawyer._id}`, 
+        `${NEXT_PUBLIC_API_URL}/api/hirings/check?clientEmail=${currentUser.email}&lawyerId=${lawyer._id}`, 
         { cache: "no-store" }
       );
       const checkData = await checkRes.json();
@@ -180,6 +181,15 @@ export default async function LawyerDetailsPage({ params }) {
             </div>
 
           </div>
+        </div>
+
+        {/* 💡 কনসালটেশন বুকিং ক্যালেন্ডার */}
+        <div className="mt-8">
+          <BookingCalendar
+            lawyerEmail={lawyer.email}
+            lawyerName={lawyer.name}
+            currentUser={isAuthenticated ? currentUser : null}
+          />
         </div>
 
         {/* 💡 নিচে কমেন্ট সেকশন কার্ড যোগ করা হলো */}

@@ -1,11 +1,12 @@
 import AdminCharts from '@/components/AdminCharts';
 import { Users, Scale, DollarSign, Wallet, TrendingUp } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
 
-const NEXT_PUBLIC_BASE_URL=process.env.NEXT_PUBLIC_BASE_URL;
+const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL;
 async function getAnalyticsData() {
   try {
-    const res = await fetch(`${NEXT_PUBLIC_BASE_URL}/api/admin/analytics`, {
+    const res = await fetch(`${NEXT_PUBLIC_API_URL}/api/admin/analytics`, {
       cache: 'no-store',
     });
 

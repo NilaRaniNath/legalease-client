@@ -4,11 +4,11 @@ import { auth } from "@/lib/auth";
 import UpdateProfileForm from "./UpdateProfileForm";
 
 
-  const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+  const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL;
 async function getUserProfile(email) {
   if (!email) return null;
   try {
-    const res = await fetch(`${NEXT_PUBLIC_BASE_URL}/user/${encodeURIComponent(email)}`, {
+    const res = await fetch(`${NEXT_PUBLIC_API_URL}/user/${encodeURIComponent(email)}`, {
       cache: "no-store",
     });
     return res.ok ? await res.json() : null;
