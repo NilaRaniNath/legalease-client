@@ -13,6 +13,11 @@ export const auth = betterAuth({
     // Optional: if you don't provide a client, database transactions won't be enabled.
     client
   }),
+  trustedOrigins: [
+    "http://localhost:3000",
+    "https://legal-ease-two-silk.vercel.app",
+    process.env.CLIENT_URL,
+  ].filter(Boolean),
   socialProviders: {
         google: { 
             clientId: process.env.GOOGLE_CLIENT_ID,  
