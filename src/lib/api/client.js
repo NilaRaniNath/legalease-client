@@ -24,6 +24,7 @@ async function request(path, options = {}) {
   const baseURL = await getBaseURL();
   const res = await fetch(`${baseURL}${path}`, {
     cache: "no-store",
+    credentials: "include",
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -31,11 +32,16 @@ async function request(path, options = {}) {
     },
   });
 
-  let data = null;
+  let data = {};
   try {
     data = await res.json();
   } catch {
-    data = null;
+    try {
+      const text = await res.text();
+      data = { success: false, message: text || res.statusText };
+    } catch {
+      data = { success: false, message: res.statusText };
+    }
   }
   return { res, data };
 }

@@ -36,7 +36,11 @@ export default function CommentSection({ lawyerId, currentUser, initialComments 
         setNewComment("");
         Swal.fire("Success", "Comment added successfully!", "success");
       } else {
-        Swal.fire("Hold on!", result.data?.message || "Failed to add comment.", "warning");
+        Swal.fire(
+          "Hold on!",
+          result.data?.message || result.data?.error || "Failed to add comment.",
+          "warning"
+        );
       }
     },
     onError: () => Swal.fire("Error", "Server connection failed.", "error"),
@@ -49,10 +53,16 @@ export default function CommentSection({ lawyerId, currentUser, initialComments 
         userEmail: currentUser.email,
       }),
     onSuccess: (result) => {
-      if (result.data.success) {
+      if (result.res.ok && result.data.success) {
         queryClient.invalidateQueries({ queryKey: ["comments", lawyerId] });
         setEditingId(null);
         Swal.fire("Updated", "Your comment has been updated.", "success");
+      } else {
+        Swal.fire(
+          "Update failed!",
+          result.data?.message || result.data?.error || "Please try again.",
+          "error"
+        );
       }
     },
     onError: () => Swal.fire("Error", "Failed to update comment.", "error"),
@@ -61,9 +71,15 @@ export default function CommentSection({ lawyerId, currentUser, initialComments 
   const deleteMutation = useMutation({
     mutationFn: (id) => commentApi.remove(id, currentUser.email),
     onSuccess: (result) => {
-      if (result.data.success) {
+      if (result.res.ok && result.data.success) {
         queryClient.invalidateQueries({ queryKey: ["comments", lawyerId] });
         Swal.fire("Deleted!", "Your comment has been deleted.", "success");
+      } else {
+        Swal.fire(
+          "Delete failed!",
+          result.data?.message || result.data?.error || "Please try again.",
+          "error"
+        );
       }
     },
     onError: () => Swal.fire("Error", "Failed to delete comment.", "error"),

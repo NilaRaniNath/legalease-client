@@ -18,16 +18,28 @@ export default function SignIn() {
     if (error) setError(''); 
   };
 
+ const getDashboardByRole = (userRole) => {
+    if (userRole === 'admin') return '/dashboard/admin';
+    if (userRole === 'lawyer') return '/dashboard/lawyer';
+    return '/dashboard/user';
+  };
+
  const handleSubmit = async (e) => {
   e.preventDefault();
   setLoading(true);
   setError('');
 
+  const requestedRedirect = new URLSearchParams(window.location.search).get('redirect');
+  const safeRedirect =
+    requestedRedirect && requestedRedirect.startsWith('/')
+      ? requestedRedirect
+      : null;
+
   await signIn.email(
     {
       email: formData.email,
       password: formData.password,
-      callbackUrl: '/dashboard', 
+      callbackUrl: safeRedirect || getDashboardByRole(),
     },
     {
       onRequest: () => {
@@ -35,18 +47,12 @@ export default function SignIn() {
       },
       onSuccess: (ctx) => {
         setLoading(false);
-       
-        
-        const userRole = ctx.data?.user?.role; 
-           router.refresh();
-      
-        if (userRole === 'admin') {
-          router.push('/dashboard/admin');
-        } else if (userRole === 'lawyer') {
-          router.push('/dashboard/lawyer');
-        } else {
-          router.push('/dashboard/user'); 
-        }
+
+        const userRole = ctx.data?.user?.role;
+        router.refresh();
+
+        const target = safeRedirect || getDashboardByRole(userRole);
+        router.push(target);
       },
       onError: (ctx) => {
         setLoading(false);

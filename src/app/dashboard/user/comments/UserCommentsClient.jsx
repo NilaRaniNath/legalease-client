@@ -27,16 +27,18 @@ export default function UserCommentsClient({ initialComments = [], currentUser }
   const deleteMutation = useMutation({
     mutationFn: (id) => commentApi.remove(id, currentUser?.email),
     onSuccess: (result) => {
-      if (result.data.success) {
+      if (result.res.ok && result.data.success) {
         toast.success("Comment deleted successfully!");
         queryClient.invalidateQueries({ queryKey: ["userComments"] });
       } else {
-        toast.error(result.data.message || "Failed to delete.");
+        toast.error(
+          result.data?.message || result.data?.error || "Failed to delete."
+        );
       }
     },
-    onError: () => {
-      console.error("Delete error");
-      toast.error("Something went wrong!");
+    onError: (err) => {
+      console.error("Delete error", err);
+      toast.error(err?.message || "Something went wrong!");
     },
   });
 
@@ -47,17 +49,19 @@ export default function UserCommentsClient({ initialComments = [], currentUser }
         userEmail: currentUser?.email,
       }),
     onSuccess: (result) => {
-      if (result.data.success) {
+      if (result.res.ok && result.data.success) {
         toast.success("Comment updated successfully!");
         queryClient.invalidateQueries({ queryKey: ["userComments"] });
         setIsOpen(false);
       } else {
-        toast.error(result.data.message || "Update failed.");
+        toast.error(
+          result.data?.message || result.data?.error || "Update failed."
+        );
       }
     },
-    onError: () => {
-      console.error("Update error");
-      toast.error("Update failed.");
+    onError: (err) => {
+      console.error("Update error", err);
+      toast.error(err?.message || "Update failed.");
     },
   });
 

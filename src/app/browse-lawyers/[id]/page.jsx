@@ -175,7 +175,10 @@ export default async function LawyerDetailsPage({ params }) {
               {isAuthenticated ? (
                 <HireButtonHandler lawyer={lawyer} stripePublishableKey={process.env.STRIPE_PUBLISHABLE_KEY} />
               ) : (
-                <Link href="/api/signin" className="w-full block">
+                <Link
+                  href={`/auth/signin?redirect=${encodeURIComponent(`/browse-lawyers/${email || id}`)}`}
+                  className="w-full block"
+                >
                   <button className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-bold rounded-xl tracking-wide transition-all shadow-lg flex items-center justify-center gap-2">
                     <LogIn size={18} />
                     Sign in to Hire a Lawyer

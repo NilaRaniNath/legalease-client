@@ -1,17 +1,31 @@
 "use client";
 
-import { Card, Avatar, Chip } from "@heroui/react";
+import { Card, Avatar, Chip, Button } from "@heroui/react";
 import { useRouter } from "next/navigation";
-import { Briefcase, DollarSign, User } from "lucide-react";
+import { Briefcase, DollarSign, User, LogIn } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
 
 export default function LawyerCard({ lawyer }) {
   const router = useRouter();
   const isBusy = lawyer.status?.toLowerCase() === "busy";
+  const { data: session } = authClient.useSession();
+  const isAuthenticated = !!session?.user;
+
+  const lawyerLink =
+    `/browse-lawyers/${lawyer.email || lawyer._id || lawyer.userId}`;
+
+  const handleCardOpen = () => {
+    router.push(lawyerLink);
+  };
+
+  const handleSignIn = (e) => {
+    e.stopPropagation();
+    router.push(`/auth/signin?redirect=${encodeURIComponent(lawyerLink)}`);
+  };
 
   return (
     <Card
-      // 💡 ফিক্স: lawyer._id এর বদলে lawyer.userId এবং আপনার কারেন্ট রাউট পাথ '/lawyers/' ব্যবহার করা হলো
-      onClick={() => router.push(`/lawyers/${lawyer.userId}`)} 
+      onClick={handleCardOpen}
       className="bg-slate-900/40 border border-white/10 p-4 rounded-2xl hover:border-blue-500/50 hover:bg-slate-900/80 transition-all group duration-300 backdrop-blur-md flex flex-col justify-between items-start text-left w-full h-full shadow-lg cursor-pointer"
     >
       {/* টপ সেকশন: অ্যাভাটার এবং Busy ব্যাজ */}
@@ -46,14 +60,27 @@ export default function LawyerCard({ lawyer }) {
       </div>
 
       {/* ফুটার সেকশন */}
-      <div className="w-full pt-3 mt-4 border-t border-white/5 flex items-center justify-between">
+      <div className="w-full pt-3 mt-4 border-t border-white/5 flex items-center justify-between gap-3">
         <div className="flex items-center gap-0.5 text-emerald-400 font-semibold text-sm">
           <DollarSign className="w-4 h-4" />
           <span>{lawyer.fee} <span className="text-[10px] text-slate-500 font-normal">/ hr</span></span>
         </div>
-        <span className="text-[11px] font-medium text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          View Details →
-        </span>
+
+        {!isAuthenticated ? (
+          <Button
+            size="sm"
+            radius="xl"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+            startContent={<LogIn className="w-3.5 h-3.5" />}
+            onPress={handleSignIn}
+          >
+            Sign In
+          </Button>
+        ) : (
+          <span className="text-[11px] font-medium text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            View Details →
+          </span>
+        )}
       </div>
     </Card>
   );

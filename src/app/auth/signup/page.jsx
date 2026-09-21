@@ -25,6 +25,14 @@ export default function SignUp() {
     if (error) setError('');
   };
 
+  const getRedirectTarget = (selectedRole) => {
+    const requestedRedirect = new URLSearchParams(window.location.search).get('redirect');
+    if (requestedRedirect && requestedRedirect.startsWith('/')) {
+      return requestedRedirect;
+    }
+    return selectedRole === 'lawyer' ? '/dashboard/lawyer' : '/dashboard/user';
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -36,8 +44,7 @@ export default function SignUp() {
 
     setLoading(true);
 
-  
-    const targetDashboard = role === 'lawyer' ? '/dashboard/lawyer' : '/dashboard';
+    const targetDashboard = getRedirectTarget(role);
 
     await authClient.signUp.email({
       email: formData.email,
@@ -62,7 +69,7 @@ export default function SignUp() {
   const handleGoogleLogin = async () => {
     setError('');
     
-    const targetDashboard = role === 'lawyer' ? '/dashboard/lawyer' : '/dashboard';
+    const targetDashboard = getRedirectTarget(role);
     
     await authClient.signIn.social({
       provider: 'google',
